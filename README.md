@@ -73,5 +73,5 @@ Views: `count`, `get_round`, `list_rounds`, `get_entry`, `leaderboard`, `get_sta
 
 ## Deployment
 - Studio: `0xbDe7C028AFC84e8444e1d082f5d563B1eb6C07B0` (explorer: https://explorer-studio.genlayer.com/contracts/0xbDe7C028AFC84e8444e1d082f5d563B1eb6C07B0). This is an earlier, longer version of the contract (17,538 bytes, SHA-256 `36556f80d79aed08b86ee4a23dc36834b42dc283a1c545737be30305a30e8b88`) with the same logic and longer juror prompt wording.
-- Bradbury: (fill in). Source deployed: `contracts/beat_the_jury.py`, 11,622 bytes, SHA-256 `bb8c7ec416b714132eabd4839f0a3b8115bdce1f3d887b11d547b56f8baadb3b`.
-- Live app: (fill in)
+- Bradbury: `0xcc1A40b32221F8588385C38b2cfcfE620515d7CF` (explorer: https://explorer-bradbury.genlayer.com/address/0xcc1A40b32221F8588385C38b2cfcfE620515d7CF). Deployment transaction: `0x003970487bf55f38616b0a380ef86ccd645cb48558806eccffa4ac2865498c94` (https://explorer-bradbury.genlayer.com/tx/0x003970487bf55f38616b0a380ef86ccd645cb48558806eccffa4ac2865498c94). Source deployed: `contracts/beat_the_jury.py`, 11,622 bytes, SHA-256 `bb8c7ec416b714132eabd4839f0a3b8115bdce1f3d887b11d547b56f8baadb3b`.
+- Live app: https://captainkg15.github.io/beat-the-jury/app/ (defaults to Bradbury; the network menu switches to Studio, which needs no wallet)

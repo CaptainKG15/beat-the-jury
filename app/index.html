@@ -170,7 +170,7 @@
     </div>
     <div class="conn">
       <label class="sr" for="network">Network</label>
-      <select id="network"><option value="studionet">GenLayer Studio</option><option value="bradbury">Bradbury testnet</option></select>
+      <select id="network"><option value="bradbury">Bradbury testnet</option><option value="studionet">GenLayer Studio (no wallet needed)</option></select>
       <button id="connBtn" class="chip-btn" type="button" aria-expanded="false" aria-controls="connection">Contract</button>
     </div>
   </header>
@@ -238,9 +238,9 @@
 // ---------------------------------------------------------------- config
 // Fill in the deployed contract addresses, or use ?network=bradbury&address=0x...
 const CONFIG = {
-  addresses: { studionet: "0xbDe7C028AFC84e8444e1d082f5d563B1eb6C07B0", bradbury: "" },
+  addresses: { studionet: "0xbDe7C028AFC84e8444e1d082f5d563B1eb6C07B0", bradbury: "0xcc1A40b32221F8588385C38b2cfcfE620515d7CF" },
   chainKeys: { studionet: "studionet", bradbury: "testnetBradbury" },
-  defaultNetwork: "studionet",
+  defaultNetwork: "bradbury",
 };
 const GUESSES = ["yes", "no", "unclear"];
 const CONFIDENCES = [40, 50, 60, 70, 80, 90];
@@ -462,7 +462,7 @@ async function renderRound(r) {
   let mine = null;
   if (me) { try { mine = await read("get_entry", [BigInt(r.id), me]); } catch (e) {} }
   const box = el("div"); panel.append(box);
-  const refreshAll = async () => { await openRound(r.id); loadRounds(); loadBoards(); };
+  const refreshAll = async () => { await openRound(r.id); loadRounds(); loadBoards(); setTimeout(() => { loadRounds(); loadBoards(); }, 5000); };
 
   if (r.status === "commit") {
     if (mine && mine.committed) {

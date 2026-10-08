@@ -11,6 +11,9 @@ Only what was actually observed is listed. Failures and surprises belong here to
 
 After these three rounds the contract's jury-agreement record read: 2 unanimous, 1 split 2 to 1, 0 three-way splits, 0 void.
 
+## Bradbury
+The compact contract (11,622 bytes) was deployed to Bradbury at `0xcc1A40b32221F8588385C38b2cfcfE620515d7CF` and the deployment was accepted. No rounds have been played on Bradbury yet, so nothing in the table above was run there.
+
 ## Observations
 - Round 2 was a hostile page. The contract's design settles such a page as `unclear` with firmness 3 without asking the jurors (checked in the off-chain tests). On-chain I observed the `unclear` verdict, the zero score, and the agreement record moving from 1 unanimous, 1 split to 2 unanimous, 1 split. I did not observe whether the jurors were consulted.
 - The agreement bar briefly showed the old counts right after a settle and corrected itself on refresh. It is a display lag in the page, not a contract counter problem.
@@ -24,4 +27,4 @@ After these three rounds the contract's jury-agreement record read: 2 unanimous,
 - An unreadable page, expected to void the round
 - Multi-player rounds (two accounts), including a player who never reveals
 - Rule refusals on the live contract: double commit, wrong reveal, early settle by a non-creator
-- Any run on Bradbury
+- Any round played on Bradbury (the contract is deployed there but unplayed)
