@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beat the Jury</title>
+<style>
+  :root {
+    --bg:#f6f7f9; --card:#fff; --text:#16181d; --muted:#5d6573; --line:#e1e4ea; --accent:#2f5bea;
+    --ok:#1a7f4b; --warn:#a15c00; --bad:#b3261e;
+    --ok-bg:#e5f5ec; --warn-bg:#fdf0dc; --bad-bg:#fbe7e5; --info-bg:#e8eefc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1115; --card:#181b21; --text:#eceef2; --muted:#9aa3b2; --line:#2a2f39; --accent:#7d9bff;
+      --ok:#5fd39b; --warn:#f0b25a; --bad:#ff8a80; --ok-bg:#12301f; --warn-bg:#3a2a10; --bad-bg:#3a1815; --info-bg:#1b2745; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:900px; margin:0 auto; padding:24px 16px 64px; }
+  header { display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; align-items:end; }
+  h1 { margin:0; font-size:30px; letter-spacing:-.02em; }
+  .tag { color:var(--muted); margin:4px 0 18px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:16px; }
+  h2 { margin:0 0 10px; font-size:17px; }
+  label { display:block; font-weight:600; margin:12px 0 4px; font-size:13px; }
+  input, select { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); font:inherit; }
+  input:focus, select:focus, button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  button { padding:10px 16px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; font-weight:600; cursor:pointer; margin:12px 8px 0 0; }
+  button.secondary { background:transparent; color:var(--text); border:1px solid var(--line); }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  .muted { color:var(--muted); font-size:13px; }
+  .mono { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; word-break:break-all; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+  .b-ok { background:var(--ok-bg); color:var(--ok); } .b-warn { background:var(--warn-bg); color:var(--warn); }
+  .b-bad { background:var(--bad-bg); color:var(--bad); } .b-info { background:var(--info-bg); color:var(--accent); }
+  .notice { padding:10px 12px; border-radius:8px; margin-top:12px; white-space:pre-wrap; }
+  .hidden { display:none; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; } @media (max-width:700px) { .grid2 { grid-template-columns:1fr; } }
+  .item { display:flex; justify-content:space-between; gap:10px; align-items:center; padding:9px 0; border-top:1px solid var(--line); cursor:pointer; }
+  .item:first-child { border-top:0; } .item:hover .t { text-decoration:underline; }
+  .t { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .choices { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+  .choice { flex:1 1 90px; padding:10px; border:1px solid var(--line); border-radius:8px; text-align:center; cursor:pointer; font-weight:600; }
+  .choice.on { border-color:var(--accent); background:var(--info-bg); color:var(--accent); }
+  table { width:100%; border-collapse:collapse; margin-top:10px; } th, td { text-align:left; padding:6px 8px; border-top:1px solid var(--line); font-size:14px; }
+  th { color:var(--muted); font-weight:600; border-top:0; }
+  .big { font-size:22px; font-weight:700; }
+  a { color:var(--accent); } footer { color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Beat the Jury</h1>
+      <p class="tag" style="margin-bottom:0">Predict what a jury of GenLayer validators will decide about a web page. Guesses are hidden until the reveal, and honest confidence scores best.</p>
+    </div>
+    <div style="min-width:210px">
+      <label for="network" style="margin-top:0">Network</label>
+      <select id="network"><option value="studionet">GenLayer Studio</option><option value="bradbury">Bradbury testnet</option></select>
+    </div>
+  </header>
+
+  <div class="card" style="margin-top:16px">
+    <label for="address" style="margin-top:0">Game contract address on this network</label>
+    <input id="address" class="mono" placeholder="0x..." autocomplete="off" spellcheck="false">
+    <div id="netnote" class="muted" style="margin-top:6px"></div>
+    <div id="who" class="muted" style="margin-top:4px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Start a round</h2>
+    <label for="url">Public page URL (https only)</label>
+    <input id="url" placeholder="https://example.com/page" autocomplete="off" spellcheck="false">
+    <label for="claim">Claim about the page (up to 280 characters)</label>
+    <input id="claim" maxlength="280" placeholder="The page says that ..." autocomplete="off">
+    <label for="maxp">Number of players (the round opens for reveals when full)</label>
+    <select id="maxp"></select>
+    <button id="create">Create round</button>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between"><h2 style="margin:0">Rounds</h2><button id="refresh" class="secondary" style="margin:0">Refresh</button></div>
+    <div id="rounds" style="margin-top:6px"><span class="muted">Enter a contract address to load rounds.</span></div>
+  </div>
+
+  <div id="roundCard" class="card hidden"></div>
+
+  <div id="txbox" class="card hidden"><h2>Transaction</h2><ul id="steps" style="list-style:none; padding:0; margin:0"></ul><div id="txmsg" class="notice"></div></div>
+
+  <div class="grid2">
+    <div class="card"><h2>Leaderboard</h2><div id="board"><span class="muted">No scores yet.</span></div></div>
+    <div class="card"><h2>How predictable is the jury?</h2><div id="stats"><span class="muted">No settled rounds yet.</span></div></div>
+  </div>
+
+  <footer>
+    <p><strong>How it works:</strong> you pick a guess and a confidence, and only a hash of it goes on-chain. After everyone has committed, you reveal. Three juror readings of the page are taken by each validator and the majority is the verdict; validators must agree on the verdict, so wording never matters. Points follow a proper scoring rule, so being honest about your confidence pays best (0 to 340 per round).</p>
+    <p><strong>Limits:</strong> the jury is LLM readings of one page at one moment, so borderline claims can fail to settle and be retried. If you clear this browser's data before revealing, your secret is lost. On Studio the app uses a throwaway key kept in this browser, which holds no funds.</p>
+  </footer>
+</div>
+
+<script type="module">
+// ---------------------------------------------------------------- config
+// Fill in the deployed contract addresses, or use ?network=bradbury&address=0x...
+const CONFIG = {
+  addresses: { studionet: "0xbDe7C028AFC84e8444e1d082f5d563B1eb6C07B0", bradbury: "" },
+  chainKeys: { studionet: "studionet", bradbury: "testnetBradbury" },
+  defaultNetwork: "studionet",
+};
+const GUESSES = ["yes", "no", "unclear"];
+const CONFIDENCES = [40, 50, 60, 70, 80, 90];
+
+// ---------------------------------------------------------------- helpers
+const $ = (id) => document.getElementById(id);
+function el(tag, props = {}, kids = []) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) { if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else n[k] = v; }
+  for (const c of [].concat(kids)) n.append(c);
+  return n;
+}
+function norm(v) {
+  if (v instanceof Map) { const o = {}; for (const [k, x] of v) o[String(k)] = norm(x); return o; }
+  if (Array.isArray(v)) return v.map(norm);
+  if (typeof v === "bigint") return Number(v);
+  if (v && typeof v === "object") { const o = {}; for (const k of Object.keys(v)) o[k] = norm(v[k]); return o; }
+  return v;
+}
+const isHttps = (u) => typeof u === "string" && u.startsWith("https://") && !/\s/.test(u);
+const short = (a) => (a ? a.slice(0, 6) + "..." + a.slice(-4) : "");
+function friendly(e) {
+  const t = String((e && (e.shortMessage || e.message)) || e);
+  if (/user rejected|denied/i.test(t)) return "You rejected the request in your wallet.";
+  return t.length > 400 ? t.slice(0, 400) + "..." : t;
+}
+async function sha256hex(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function randomSalt() {
+  const a = new Uint8Array(16); crypto.getRandomValues(a);
+  return [...a].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+// Same scoring as the contract (see squared_error / points_for in beat_the_jury.py)
+function pointsFor(guess, conf, verdict) {
+  if (!GUESSES.includes(verdict)) return 0;
+  const err = guess === verdict ? 6 * (100 - conf) * (100 - conf) : 6 * conf * conf + 20000;
+  return Math.floor((68600 - err) / 200);
+}
+const firmnessText = (f) => ({ 3: "unanimous jury", 2: "split 2 to 1", 1: "three-way split" }[f] || "");
+function badge(status) {
+  const m = { commit: ["b-info", "commit phase"], reveal: ["b-warn", "reveal phase"], settled: ["b-ok", "settled"], void: ["b-bad", "void"] }[status] || ["b-info", status];
+  return el("span", { class: "badge " + m[0], text: m[1] });
+}
+
+// ---------------------------------------------------------------- SDK and session
+let sdk = null, chains = null, types = null, net = CONFIG.defaultNetwork, session = null, busy = false, current = null;
+
+async function loadSdk() {
+  if (sdk) return;
+  try {
+    sdk = await import("https://esm.sh/genlayer-js");
+    chains = await import("https://esm.sh/genlayer-js/chains");
+    try { types = await import("https://esm.sh/genlayer-js/types"); } catch (e) { types = null; }
+  } catch (e) { throw new Error("Could not load the GenLayer SDK from the CDN. Check your connection and reload. (" + (e.message || e) + ")"); }
+}
+function chainObj() {
+  const c = chains[CONFIG.chainKeys[net]];
+  if (!c) throw new Error("This SDK build has no chain for " + net + ".");
+  return c;
+}
+function contractAddress() {
+  const a = $("address").value.trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(a)) throw new Error("Enter the full contract address (0x followed by 40 characters) for this network.");
+  return a;
+}
+async function getSession() {
+  if (session && session.net === net) return session;
+  await loadSdk();
+  let client, address;
+  if (net === "studionet") {
+    // Throwaway Studio-only key, kept in this browser so you can reveal later. Holds no funds. Never reuse a real key.
+    const KEY = "jury.studioKey";
+    let pk = null; try { pk = localStorage.getItem(KEY); } catch (e) {}
+    if (!pk && sdk.generatePrivateKey) { pk = sdk.generatePrivateKey(); try { localStorage.setItem(KEY, pk); } catch (e) {} }
+    const account = pk ? sdk.createAccount(pk) : sdk.createAccount();
+    address = account.address; client = sdk.createClient({ chain: chainObj(), account });
+  } else {
+    if (!window.ethereum) throw new Error("No browser wallet found. Install a wallet such as MetaMask to play on Bradbury.");
+    const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+    address = accounts[0]; client = sdk.createClient({ chain: chainObj(), account: address });
+    try { if (client.connect) await client.connect(CONFIG.chainKeys[net]); } catch (e) { console.warn("connect():", e); }
+  }
+  session = { net, client, address: address.toLowerCase() };
+  $("who").textContent = "Playing as " + session.address + (net === "studionet" ? " (throwaway Studio key)" : "");
+  return session;
+}
+async function read(fn, args = []) {
+  await loadSdk();
+  const client = sdk.createClient({ chain: chainObj() });
+  return norm(await client.readContract({ address: contractAddress(), functionName: fn, args }));
+}
+async function write(fn, args, onStage) {
+  const { client } = await getSession();
+  onStage("sign");
+  const hash = await client.writeContract({ address: contractAddress(), functionName: fn, args, value: 0n });
+  onStage("submit", hash);
+  const ok = (types && types.TransactionStatus && types.TransactionStatus.ACCEPTED) || "ACCEPTED";
+  await client.waitForTransactionReceipt({ hash, status: ok, retries: 200, interval: 3000 });
+  onStage("done", hash);
+  return hash;
+}
+
+// ---------------------------------------------------------------- transaction UI
+const STEPS = [["sign", "Approve and send the transaction"], ["submit", "Submitted to the network"], ["done", "Validators finished"], ["check", "Result confirmed on-chain"]];
+function startTx() {
+  $("txbox").classList.remove("hidden"); const ul = $("steps"); ul.replaceChildren();
+  for (const [k, t] of STEPS) ul.append(el("li", { id: "st-" + k, text: "○  " + t, style: "color:var(--muted); padding:3px 0" }));
+  $("txmsg").className = "hidden"; $("txmsg").textContent = "";
+}
+function mark(k, state) {
+  const li = $("st-" + k); if (!li) return;
+  const [sym, col] = { active: ["◐", "var(--accent)"], done: ["●", "var(--ok)"], fail: ["✕", "var(--bad)"] }[state];
+  li.textContent = sym + "  " + STEPS.find((s) => s[0] === k)[1]; li.style.color = col;
+}
+function say(text, kind) { const m = $("txmsg"); m.className = "notice " + ({ ok: "b-ok", bad: "b-bad", warn: "b-warn" }[kind] || "b-info"); m.textContent = text; }
+async function runTx(fn, args, verify, okMessage) {
+  if (busy) return; busy = true; document.querySelectorAll("button").forEach((b) => (b.disabled = true));
+  startTx();
+  try {
+    contractAddress(); mark("sign", "active");
+    await write(fn, args, (stage) => {
+      if (stage === "submit") { mark("sign", "done"); mark("submit", "active"); }
+      if (stage === "done") { mark("submit", "done"); mark("done", "done"); mark("check", "active"); }
+    });
+    const good = await verify();
+    if (good) { mark("check", "done"); say(okMessage, "ok"); }
+    else { mark("check", "fail"); say("The transaction finished but nothing changed. The contract refused it (for example a wrong phase, the page could not be read, or validators could not agree on the jury). Try again, or check the round's state.", "warn"); }
+  } catch (e) {
+    for (const [k] of STEPS) { const li = $("st-" + k); if (li && li.style.color === "var(--accent)") mark(k, "fail"); }
+    say(friendly(e), "bad");
+  } finally { busy = false; document.querySelectorAll("button").forEach((b) => (b.disabled = false)); }
+}
+
+// ---------------------------------------------------------------- secrets (kept only in this browser)
+const secretKey = (rid, addr) => ["jury.secret", net, $("address").value.trim().toLowerCase(), rid, addr].join(".");
+function saveSecret(rid, addr, obj) { try { localStorage.setItem(secretKey(rid, addr), JSON.stringify(obj)); } catch (e) {} }
+function loadSecret(rid, addr) { try { return JSON.parse(localStorage.getItem(secretKey(rid, addr))); } catch (e) { return null; } }
+
+// ---------------------------------------------------------------- views
+async function loadRounds() {
+  const box = $("rounds");
+  try {
+    contractAddress(); box.replaceChildren(el("span", { class: "muted", text: "Loading..." }));
+    const n = Number(await read("count"));
+    if (n === 0) { box.replaceChildren(el("span", { class: "muted", text: "No rounds yet. Start one above." })); return; }
+    const items = await read("list_rounds", [BigInt(Math.max(0, n - 10)), BigInt(10)]);
+    box.replaceChildren();
+    for (const r of items.slice().reverse()) {
+      const row = el("div", { class: "item" }, [el("span", { class: "t", text: "#" + r.id + "  " + r.claim }), badge(r.status)]);
+      row.onclick = () => openRound(r.id); box.append(row);
+    }
+  } catch (e) { box.replaceChildren(el("span", { class: "muted", text: friendly(e) })); }
+}
+
+async function loadBoards() {
+  try {
+    contractAddress();
+    const rows = await read("leaderboard", [BigInt(10)]);
+    const b = $("board"); b.replaceChildren();
+    if (!rows.length) { b.append(el("span", { class: "muted", text: "No scores yet." })); }
+    else {
+      const t = el("table", {}, [el("tr", {}, ["#", "Player", "Points", "Rounds"].map((h) => el("th", { text: h })))]);
+      rows.forEach((r, i) => t.append(el("tr", {}, [String(i + 1), short(r.player), String(r.points), String(r.rounds)].map((x) => el("td", { text: x })))));
+      b.append(t);
+    }
+    const s = await read("get_stats"); const sb = $("stats"); sb.replaceChildren();
+    if (!s.settled && !s.void) { sb.append(el("span", { class: "muted", text: "No settled rounds yet." })); return; }
+    const pct = (x) => (s.settled ? Math.round((100 * x) / s.settled) + "%" : "0%");
+    const t = el("table");
+    [["Rounds settled", s.settled], ["Unanimous (3 of 3)", s.unanimous + "  (" + pct(s.unanimous) + ")"], ["Split 2 to 1", s.majority_2_of_3 + "  (" + pct(s.majority_2_of_3) + ")"],
+     ["Three-way split", s.three_way_split + "  (" + pct(s.three_way_split) + ")"], ["Void (page unreadable)", s.void]].forEach(([k, v]) =>
+      t.append(el("tr", {}, [el("td", { text: k }), el("td", { text: String(v) })])));
+    sb.append(t);
+  } catch (e) { /* boards are optional until an address is set */ }
+}
+
+async function openRound(id) {
+  const card = $("roundCard"); card.classList.remove("hidden");
+  try {
+    const r = await read("get_round", [BigInt(id)]);
+    current = r; await renderRound(r);
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e) { card.replaceChildren(el("div", { class: "notice b-bad", text: "Could not load round " + id + ": " + friendly(e) })); }
+}
+
+async function renderRound(r) {
+  const card = $("roundCard"); card.replaceChildren();
+  card.append(el("div", { class: "muted", text: "Round " + r.id }), el("div", { class: "big", text: r.claim }));
+  card.append(isHttps(r.url) ? el("a", { href: r.url, text: r.url, target: "_blank", rel: "noopener noreferrer" }) : el("span", { text: r.url }));
+  card.append(el("div", { style: "margin-top:8px" }, [badge(r.status), el("span", { class: "muted", text: "   " + r.commit_count + " of " + r.max_players + " committed, " + r.reveal_count + " revealed" })]));
+
+  const me = (session && session.address) || null;
+  let mine = null;
+  if (me) { try { mine = await read("get_entry", [BigInt(r.id), me]); } catch (e) {} }
+  const box = el("div", { style: "margin-top:12px" }); card.append(box);
+
+  if (r.status === "commit") {
+    if (mine && mine.committed) {
+      box.append(el("div", { class: "notice b-info", text: "You have committed. Your guess is hidden. Keep this browser, because the secret needed to reveal is stored here." }));
+    } else {
+      let pick = "yes";
+      box.append(el("label", { text: "Your guess for the jury's verdict", style: "margin-top:0" }));
+      const ch = el("div", { class: "choices" });
+      GUESSES.forEach((g) => { const c = el("div", { class: "choice" + (g === pick ? " on" : ""), text: g }); c.onclick = () => { pick = g; [...ch.children].forEach((x) => x.classList.toggle("on", x.textContent === g)); }; ch.append(c); });
+      box.append(ch, el("label", { text: "Confidence (honest is best: being overconfident and wrong costs the most)" }));
+      const conf = el("select"); CONFIDENCES.forEach((c) => conf.append(el("option", { value: String(c), text: c + "%", selected: c === 70 }))); box.append(conf);
+      const b = el("button", { text: "Commit my hidden guess" });
+      b.onclick = async () => {
+        try {
+          const s = await getSession(); const salt = randomSalt(); const confidence = Number(conf.value);
+          const hash = await sha256hex(r.id + "|" + pick + "|" + confidence + "|" + salt + "|" + s.address);
+          saveSecret(r.id, s.address, { guess: pick, confidence, salt });
+          await runTx("commit", [BigInt(r.id), hash], async () => { const e = await read("get_entry", [BigInt(r.id), s.address]); return e.committed; }, "Committed. Your guess is hidden until the reveal.");
+        } catch (e) { startTx(); say(friendly(e), "bad"); }
+        await openRound(r.id); loadRounds();
+      };
+      box.append(b);
+    }
+    if (me && r.creator.toLowerCase() === me && r.commit_count >= 1) {
+      const b = el("button", { class: "secondary", text: "Close commitments now" });
+      b.onclick = async () => { await runTx("close_commits", [BigInt(r.id)], async () => (await read("get_round", [BigInt(r.id)])).status === "reveal", "Commitments closed. Reveal phase is open."); await openRound(r.id); loadRounds(); };
+      box.append(b);
+    }
+  }
+
+  if (r.status === "reveal") {
+    if (mine && mine.committed && !mine.revealed) {
+      const sec = loadSecret(r.id, me);
+      if (sec) {
+        const b = el("button", { text: "Reveal my guess" });
+        b.onclick = async () => { await runTx("reveal", [BigInt(r.id), sec.guess, sec.confidence, sec.salt], async () => (await read("get_entry", [BigInt(r.id), me])).revealed, "Revealed."); await openRound(r.id); };
+        box.append(b);
+      } else box.append(el("div", { class: "notice b-bad", text: "This browser has no stored secret for this round, so your guess cannot be revealed. (Using a different browser or clearing data loses it.)" }));
+    } else if (mine && mine.revealed) box.append(el("div", { class: "notice b-info", text: "You revealed: " + mine.guess + " at " + mine.confidence + "%." }));
+    const b = el("button", { class: "secondary", text: "Ask the jury (settle the round)" });
+    b.onclick = async () => { await runTx("settle", [BigInt(r.id)], async () => ["settled", "void"].includes((await read("get_round", [BigInt(r.id)])).status), "The jury has spoken."); await openRound(r.id); loadRounds(); loadBoards(); };
+    box.append(b, el("div", { class: "muted", text: "Anyone can settle once everyone has revealed. The round creator can settle early. This takes a minute or two while validators read the page." }));
+  }
+
+  if (r.status === "settled" || r.status === "void") {
+    const v = r.status === "void" ? "void: the page could not be read, so no points were awarded." : "Jury verdict: " + r.verdict + " (" + firmnessText(r.firmness) + ")";
+    box.append(el("div", { class: "notice " + (r.status === "void" ? "b-bad" : "b-ok"), text: v }));
+    const t = el("table", {}, [el("tr", {}, ["Player", "Guess", "Confidence", "Points"].map((h) => el("th", { text: h })))]);
+    for (const p of r.players) {
+      let e = { revealed: false }; try { e = await read("get_entry", [BigInt(r.id), p]); } catch (x) {}
+      const pts = e.revealed && r.status === "settled" ? pointsFor(e.guess, e.confidence, r.verdict) : 0;
+      t.append(el("tr", {}, [short(p) + (p === me ? " (you)" : ""), e.revealed ? e.guess : "did not reveal", e.revealed ? e.confidence + "%" : "", String(pts)].map((x) => el("td", { text: x }))));
+    }
+    box.append(t);
+  }
+}
+
+// ---------------------------------------------------------------- actions
+async function createRound() {
+  const url = $("url").value.trim(), claim = $("claim").value.trim(), maxp = Number($("maxp").value);
+  startTx();
+  if (!isHttps(url)) return say("The URL must start with https:// and contain no spaces.", "bad");
+  if (!claim || claim.length > 280) return say("The claim must be between 1 and 280 characters.", "bad");
+  let before = 0;
+  try { before = Number(await read("count")); } catch (e) { return say(friendly(e), "bad"); }
+  await runTx("create_round", [url, claim, BigInt(maxp)], async () => Number(await read("count")) > before, "Round created.");
+  try { const n = Number(await read("count")); if (n > before) await openRound(n - 1); } catch (e) {}
+  loadRounds();
+}
+
+function applyNetwork() {
+  $("network").value = net; session = null; $("who").textContent = "";
+  let saved = ""; try { saved = localStorage.getItem("jury.address." + net) || ""; } catch (e) {}
+  $("address").value = CONFIG.addresses[net] || saved;
+  $("netnote").textContent = net === "studionet" ? "Studio is a sandbox. Writes use a throwaway account kept in this browser." : "Bradbury is a testnet. Writes use your browser wallet and need testnet GEN for gas.";
+}
+function init() {
+  for (let i = 1; i <= 20; i++) $("maxp").append(el("option", { value: String(i), text: i === 1 ? "1 (solo practice)" : String(i), selected: i === 2 }));
+  const p = new URLSearchParams(location.search);
+  if (["studionet", "bradbury"].includes(p.get("network"))) net = p.get("network");
+  applyNetwork(); if (p.get("address")) $("address").value = p.get("address");
+  $("network").onchange = () => { net = $("network").value; applyNetwork(); $("roundCard").classList.add("hidden"); loadRounds(); loadBoards(); };
+  $("address").onchange = () => { try { localStorage.setItem("jury.address." + net, $("address").value.trim()); } catch (e) {} loadRounds(); loadBoards(); };
+  $("create").onclick = createRound;
+  $("refresh").onclick = () => { loadRounds(); loadBoards(); if (current) openRound(current.id); };
+  if (/^0x[0-9a-fA-F]{40}$/.test($("address").value.trim())) { loadRounds(); loadBoards(); }
+}
+init();
+</script>
+</body>
+</html>
