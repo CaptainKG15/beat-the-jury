@@ -7,7 +7,9 @@ Players guess what a jury of validators will decide about a claim on a public we
 Every settled round also records how united the jury was, so the game builds a public record of how predictable LLM validator juries are on borderline claims.
 
 ## Status
-Built and tested off-chain (80 checks). Not yet verified on GenLayer when this README was written. See `tests/attacks/RESULTS.md` for what has actually been run on-chain.
+Built and tested off-chain (80 checks), and played on GenLayer Studio. See `tests/attacks/RESULTS.md` for exactly what has been run on-chain.
+
+The contract source is kept small on purpose: a larger version (17,538 bytes) was refused by Bradbury with "gas limit too high" at deployment, so comments and explanations live in this README, not in the contract.
 
 ## How a round works
 There is no clock. Every step is an explicit call, enforced by a state machine.
@@ -70,6 +72,6 @@ Views: `count`, `get_round`, `list_rounds`, `get_entry`, `leaderboard`, `get_sta
 - `STUDIO_TEST.md`: the on-chain test plan. Results go in `tests/attacks/RESULTS.md`.
 
 ## Deployment
-- Studio: `0xbDe7C028AFC84e8444e1d082f5d563B1eb6C07B0` (explorer: https://explorer-studio.genlayer.com/contracts/0xbDe7C028AFC84e8444e1d082f5d563B1eb6C07B0)
-- Bradbury: (fill in)
+- Studio: `0xbDe7C028AFC84e8444e1d082f5d563B1eb6C07B0` (explorer: https://explorer-studio.genlayer.com/contracts/0xbDe7C028AFC84e8444e1d082f5d563B1eb6C07B0). This is an earlier, longer version of the contract (17,538 bytes, SHA-256 `36556f80d79aed08b86ee4a23dc36834b42dc283a1c545737be30305a30e8b88`) with the same logic and longer juror prompt wording.
+- Bradbury: (fill in). Source deployed: `contracts/beat_the_jury.py`, 11,622 bytes, SHA-256 `bb8c7ec416b714132eabd4839f0a3b8115bdce1f3d887b11d547b56f8baadb3b`.
 - Live app: (fill in)

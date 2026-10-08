@@ -409,7 +409,10 @@ async function loadRounds() {
       const row = el("button", { class: "item", type: "button" }, [el("span", { class: "id", text: "#" + r.id }), el("span", { class: "claim", text: r.claim }), statusChip(r.status)]);
       row.onclick = () => openRound(r.id); box.append(row);
     }
-  } catch (e) { box.replaceChildren(el("div", { class: "empty", text: friendly(e) })); }
+  } catch (e) {
+    const addressProblem = /full contract address/.test(String(e && e.message));
+    box.replaceChildren(el("div", { class: "empty", text: addressProblem ? friendly(e) : "Could not load rounds just now. The network may be busy, so try Refresh in a moment." }));
+  }
 }
 
 async function loadBoards() {
@@ -453,7 +456,7 @@ async function renderRound(r) {
   const panel = $("roundPanel"); panel.replaceChildren();
   panel.append(el("div", { class: "src", text: "Round " + r.id }), el("h2", { class: "claim", text: r.claim }));
   panel.append(isHttps(r.url) ? el("a", { class: "src", href: r.url, text: r.url, target: "_blank", rel: "noopener noreferrer" }) : el("span", { class: "src", text: r.url }));
-  panel.append(el("p", { class: "note", text: r.commit_count + " of " + r.max_players + " players committed, " + r.reveal_count + " revealed." }), stepper(r.status));
+  panel.append(el("p", { class: "note", text: r.commit_count + " of " + r.max_players + (r.max_players === 1 ? " player" : " players") + " committed, " + r.reveal_count + " revealed." }), stepper(r.status));
 
   const me = (session && session.address) || null;
   let mine = null;

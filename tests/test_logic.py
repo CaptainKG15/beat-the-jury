@@ -89,7 +89,7 @@ C = Address("0xCcCcCcCcCcCcCcCcCcCcCcCcCcCcCcCcCcCcCcCc")
 
 def fresh():
     c = j.BeatTheJury.__new__(j.BeatTheJury)
-    c.rounds, c.entries, c.scores = {}, {}, {}
+    c.rounds, c.entries, c.scores, c.stat = {}, {}, {}, {}
     c.__init__()
     return c
 
@@ -143,13 +143,13 @@ lb = c.leaderboard(10)
 check("A scored the max", lb[0]["player"].lower() == A.as_hex.lower() and lb[0]["points"] == 340)
 check("B scored the wrong-at-50 amount", lb[1]["points"] == j.points_for("no", 50, "yes"))
 check("stats updated", c.get_stats()["settled"] == 1 and c.get_stats()["unanimous"] == 1)
-check("settled round cannot be settled again", raises(c.settle, rid, contains="not in the reveal"))
+check("settled round cannot be settled again", raises(c.settle, rid, contains="not in reveal phase"))
 
 # creator closes early, unrevealed player scores zero but is counted
 c = fresh(); mock_jury(answers=("no",))
 as_(A); rid = c.create_round("https://x.com/p", "claim", 5)
 commit_for(c, A, rid, "no", 80, "s1"); commit_for(c, B, rid, "yes", 80, "s2")
-as_(B); check("non-creator cannot close commits", raises(c.close_commits, rid, contains="only the round creator"))
+as_(B); check("non-creator cannot close commits", raises(c.close_commits, rid, contains="only the creator"))
 as_(A); c.close_commits(rid)
 check("closed to reveal phase", c.get_round(rid)["status"] == "reveal")
 c.reveal(rid, "no", 80, "s1"); c.settle(rid)
