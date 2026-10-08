@@ -352,6 +352,10 @@ function startTx(title) {
 }
 function mark(k, state) { const li = $("st-" + k); if (li) li.className = state; }
 function say(text) { const m = $("txmsg"); m.hidden = false; m.textContent = text; }
+async function confirmed(verify) {
+  for (let i = 0; i < 15; i++) { try { if (await verify()) return true; } catch (e) { /* a busy network can fail a read; try again */ } await new Promise((r) => setTimeout(r, 4000)); }
+  return false;
+}
 async function runTx(title, fn, args, verify, okMessage) {
   if (busy) return; busy = true; document.querySelectorAll("button").forEach((b) => (b.disabled = true));
   startTx(title);
@@ -361,8 +365,8 @@ async function runTx(title, fn, args, verify, okMessage) {
       if (stage === "submit") { mark("sign", "done"); mark("submit", "active"); }
       if (stage === "done") { mark("submit", "done"); mark("done", "done"); mark("check", "active"); }
     });
-    if (await verify()) { mark("check", "done"); say(okMessage); }
-    else { mark("check", "fail"); say("The transaction finished but nothing changed, so the contract refused it. Common causes: the round is in a different phase, the page could not be read, or validators could not agree on the jury. Check the round's state and try again."); }
+    if (await confirmed(verify)) { mark("check", "done"); say(okMessage); }
+    else { mark("check", "fail"); say("The transaction was accepted but the change did not show up after a minute. Press Refresh. If the round still shows the old phase, the contract refused it: the round may already be in a later phase, the page could not be read, or validators could not agree on the jury. If the round has moved on, you can ignore this."); }
   } catch (e) {
     for (const [k] of STEPS) { const li = $("st-" + k); if (li && li.className === "active") li.className = "fail"; }
     say(friendly(e));
@@ -373,6 +377,16 @@ async function runTx(title, fn, args, verify, okMessage) {
 const secretKey = (rid, addr) => ["jury.secret", net, $("address").value.trim().toLowerCase(), rid, addr].join(".");
 function saveSecret(rid, addr, obj) { try { localStorage.setItem(secretKey(rid, addr), JSON.stringify(obj)); } catch (e) {} }
 function loadSecret(rid, addr) { try { return JSON.parse(localStorage.getItem(secretKey(rid, addr))); } catch (e) { return null; } }
+
+// ---------------------------------------------------------------- guard against double settles
+// A settle can take many minutes, and the round still looks unsettled until it lands. Remember a sent
+// settle (in this browser, for 20 minutes) so a reload or a second click does not send another one.
+const pendingKey = (rid) => ["jury.pending", net, $("address").value.trim().toLowerCase(), rid].join(".");
+function markPending(rid) { try { localStorage.setItem(pendingKey(rid), String(Date.now())); } catch (e) {} }
+function clearPending(rid) { try { localStorage.removeItem(pendingKey(rid)); } catch (e) {} }
+function getPending(rid) {
+  try { const t = Number(localStorage.getItem(pendingKey(rid))); return t && Date.now() - t < 20 * 60 * 1000 ? t : 0; } catch (e) { return 0; }
+}
 
 // ---------------------------------------------------------------- the jury box
 function renderJury(r) {
@@ -513,7 +527,16 @@ async function renderRound(r) {
       } else box.append(el("div", { class: "banner bad", text: "This browser has no stored secret for this round, so your guess cannot be revealed. A different browser, or cleared data, loses it." }));
     } else if (mine && mine.revealed) box.append(el("div", { class: "banner", text: "You revealed " + mine.guess + " at " + mine.confidence + "%." }));
     const b = el("button", { class: "btn ghost", type: "button", text: "Ask the jury" });
-    b.onclick = async () => { await runTx("Asking the jury", "settle", [BigInt(r.id)], async () => ["settled", "void"].includes((await read("get_round", [BigInt(r.id)])).status), "The jury has ruled."); await refreshAll(); };
+    const sent = getPending(r.id);
+    if (sent) box.append(el("div", { class: "banner", text: "Ask the jury was already sent at " + new Date(sent).toLocaleTimeString() + " and may still be processing on the network. Wait a few minutes and press Refresh before sending it again." }));
+    b.onclick = async () => {
+      const again = getPending(r.id);
+      if (again && !confirm("A settle for this round was already sent at " + new Date(again).toLocaleTimeString() + " and may still be processing. A second one costs gas and is refused if the first succeeds. Send it anyway?")) return;
+      markPending(r.id);
+      await runTx("Asking the jury", "settle", [BigInt(r.id)], async () => ["settled", "void"].includes((await read("get_round", [BigInt(r.id)])).status), "The jury has ruled.");
+      clearPending(r.id);
+      await refreshAll();
+    };
     acts.append(b); box.append(acts, el("p", { class: "note", text: "Anyone can ask the jury once everyone has revealed, and the round creator can ask early. Validators read the page, so this can take a few minutes, and longer on a busy Bradbury." }));
   }
 

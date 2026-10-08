@@ -64,7 +64,9 @@ The first version asked the model once per juror, so every validator made three 
 
 The trade-off: the three votes now come from one response, so they are less independent than three separate calls. The verdict is still a majority of three, and firmness still records how united they were.
 
-Wait for a transaction to be accepted before trying again, and do not click `Ask the jury` twice. Bradbury was also very busy during testing, so some delay is the network and not the contract.
+In the first test of the one-call version, a settle on Bradbury succeeded with no leader timeout; this is one run, not a guarantee, and even the simple commit step took about 7 minutes at the time because the network was slow.
+
+Wait for a transaction to be accepted before trying again. A second `Ask the jury` on an already-settled round is refused by the contract and only wastes gas, so the page remembers a sent settle for 20 minutes (in that browser) and warns and asks for confirmation before sending another. Bradbury was also very busy during testing, so some delay is the network and not the contract.
 
 ## Honest limitations
 - Only the first 8,000 characters of a page are read.
