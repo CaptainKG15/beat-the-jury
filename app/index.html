@@ -3,101 +3,236 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>Beat the Jury</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23101B3A'/%3E%3Ccircle cx='20' cy='26' r='7' fill='%2312805C'/%3E%3Ccircle cx='32' cy='26' r='7' fill='%2312805C'/%3E%3Ccircle cx='44' cy='26' r='7' fill='none' stroke='%23B7791F' stroke-width='3'/%3E%3Cpath d='M12 50c0-9 6-13 12-13h16c6 0 12 4 12 13z' fill='%23EEF1F5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#f6f7f9; --card:#fff; --text:#16181d; --muted:#5d6573; --line:#e1e4ea; --accent:#2f5bea;
-    --ok:#1a7f4b; --warn:#a15c00; --bad:#b3261e;
-    --ok-bg:#e5f5ec; --warn-bg:#fdf0dc; --bad-bg:#fbe7e5; --info-bg:#e8eefc;
+    --bg:#EEF1F5; --surface:#FFFFFF; --text:#101B3A; --muted:#5A6478; --line:#D5DAE3; --field:#F6F8FB;
+    --ink:#101B3A; --on-ink:#EEF1F5; --jury:#101B3A; --jury-seat:#2A3763; --jury-text:#EEF1F5; --jury-muted:#9EABCB;
+    --yes:#12805C; --no:#C0344B; --unclear:#B7791F;
+    --yes-bg:#DDF1E8; --no-bg:#F8DFE4; --unclear-bg:#F6E9CF; --info-bg:#E2E8F6;
+    --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+    --body:"Instrument Sans","Segoe UI",system-ui,-apple-system,sans-serif;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg:#0f1115; --card:#181b21; --text:#eceef2; --muted:#9aa3b2; --line:#2a2f39; --accent:#7d9bff;
-      --ok:#5fd39b; --warn:#f0b25a; --bad:#ff8a80; --ok-bg:#12301f; --warn-bg:#3a2a10; --bad-bg:#3a1815; --info-bg:#1b2745; }
+    :root {
+      --bg:#0B1020; --surface:#141B33; --text:#E8ECF6; --muted:#98A3BD; --line:#26304F; --field:#0F1530;
+      --ink:#E8ECF6; --on-ink:#0B1020; --jury:#18224A; --jury-seat:#2C3A72;
+      --yes:#3DBE92; --no:#F0708A; --unclear:#E0A94E;
+      --yes-bg:#12352A; --no-bg:#3C1A24; --unclear-bg:#3A2D12; --info-bg:#1A2447;
+    }
   }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
-  .wrap { max-width:900px; margin:0 auto; padding:24px 16px 64px; }
-  header { display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; align-items:end; }
-  h1 { margin:0; font-size:30px; letter-spacing:-.02em; }
-  .tag { color:var(--muted); margin:4px 0 18px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:16px; }
-  h2 { margin:0 0 10px; font-size:17px; }
-  label { display:block; font-weight:600; margin:12px 0 4px; font-size:13px; }
-  input, select { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); font:inherit; }
-  input:focus, select:focus, button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
-  button { padding:10px 16px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; font-weight:600; cursor:pointer; margin:12px 8px 0 0; }
-  button.secondary { background:transparent; color:var(--text); border:1px solid var(--line); }
-  button:disabled { opacity:.5; cursor:not-allowed; }
-  .muted { color:var(--muted); font-size:13px; }
-  .mono { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; word-break:break-all; }
-  .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:700; }
-  .b-ok { background:var(--ok-bg); color:var(--ok); } .b-warn { background:var(--warn-bg); color:var(--warn); }
-  .b-bad { background:var(--bad-bg); color:var(--bad); } .b-info { background:var(--info-bg); color:var(--accent); }
-  .notice { padding:10px 12px; border-radius:8px; margin-top:12px; white-space:pre-wrap; }
-  .hidden { display:none; }
-  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; } @media (max-width:700px) { .grid2 { grid-template-columns:1fr; } }
-  .item { display:flex; justify-content:space-between; gap:10px; align-items:center; padding:9px 0; border-top:1px solid var(--line); cursor:pointer; }
-  .item:first-child { border-top:0; } .item:hover .t { text-decoration:underline; }
-  .t { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .choices { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
-  .choice { flex:1 1 90px; padding:10px; border:1px solid var(--line); border-radius:8px; text-align:center; cursor:pointer; font-weight:600; }
-  .choice.on { border-color:var(--accent); background:var(--info-bg); color:var(--accent); }
-  table { width:100%; border-collapse:collapse; margin-top:10px; } th, td { text-align:left; padding:6px 8px; border-top:1px solid var(--line); font-size:14px; }
-  th { color:var(--muted); font-weight:600; border-top:0; }
-  .big { font-size:22px; font-weight:700; }
-  a { color:var(--accent); } footer { color:var(--muted); font-size:13px; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 var(--body); -webkit-font-smoothing:antialiased; }
+  h1, h2, h3, .display { font-family:var(--display); letter-spacing:-0.025em; margin:0; }
+  button, input, select { font:inherit; color:inherit; }
+  .wrap { max-width:1120px; margin:0 auto; padding:0 20px 96px; }
+
+  /* top bar */
+  .bar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 0; flex-wrap:wrap; }
+  .brand { display:flex; align-items:center; gap:10px; font:800 20px/1 var(--display); letter-spacing:-0.02em; }
+  .brand svg { width:34px; height:34px; }
+  .conn { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .conn select { appearance:none; background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:8px 16px; font-weight:600; cursor:pointer; }
+  .chip-btn { background:transparent; border:1px solid var(--line); border-radius:999px; padding:8px 14px; cursor:pointer; color:var(--muted); }
+  .chip-btn:hover { color:var(--text); border-color:var(--muted); }
+  #connection { display:none; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:8px; }
+  #connection.open { display:block; }
+  #connection label { font-weight:600; font-size:14px; display:block; margin-bottom:6px; }
+  #connection input { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--field); font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; }
+  .note { color:var(--muted); font-size:14px; margin:8px 0 0; }
+
+  /* hero */
+  .hero { display:grid; grid-template-columns:1.05fr 0.95fr; gap:40px; align-items:stretch; padding:28px 0 12px; }
+  h1 { font-size:clamp(46px, 7.2vw, 92px); font-weight:800; line-height:0.95; letter-spacing:-0.04em; }
+  .lede { max-width:46ch; color:var(--muted); font-size:18px; margin:18px 0 26px; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-weight:600; font-size:14px; margin-bottom:6px; }
+  .field input, .field select { width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--surface); }
+  input:focus-visible, select:focus-visible, button:focus-visible, .pick input:focus-visible + span { outline:3px solid color-mix(in srgb, var(--text) 45%, transparent); outline-offset:2px; }
+  .row2 { display:grid; grid-template-columns:1fr 160px; gap:12px; }
+  .btn { white-space:nowrap; background:var(--ink); color:var(--on-ink); border:0; border-radius:12px; padding:13px 22px; font-weight:700; cursor:pointer; }
+  .btn:hover { filter:brightness(1.12); }
+  .btn.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+  .btn.ghost:hover { border-color:var(--muted); filter:none; }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+
+  /* the jury box: the memorable thing */
+  .jurybox { background:var(--jury); color:var(--jury-text); border-radius:28px; padding:28px; display:flex; flex-direction:column; justify-content:space-between; gap:24px; min-height:340px; }
+  .seats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .seat { aspect-ratio:5/6; position:relative; }
+  .seat svg { width:100%; height:100%; overflow:visible; }
+  .seat .shape { fill:var(--jury-seat); stroke:transparent; stroke-width:3; transition:fill .3s; }
+  .jurybox[data-verdict="yes"] { --seat:var(--yes); } .jurybox[data-verdict="no"] { --seat:var(--no); } .jurybox[data-verdict="unclear"] { --seat:var(--unclear); }
+  .seat.lit .shape { fill:var(--seat); }
+  .seat.dissent .shape { fill:transparent; stroke:var(--jury-muted); stroke-dasharray:5 6; }
+  .seat.split .shape { fill:transparent; stroke:var(--unclear); stroke-dasharray:5 6; }
+  .jurybox.anim .seat { animation:sit .55s cubic-bezier(.2,.8,.2,1) both; animation-delay:calc(var(--i) * 160ms); }
+  @keyframes sit { from { transform:translateY(18px) scale(.9); opacity:0; } to { transform:none; opacity:1; } }
+  .readout { margin-top:22px; }
+  .readout .verdict { font:800 clamp(40px,5.5vw,64px)/1 var(--display); letter-spacing:-0.035em; }
+  .jurybox[data-verdict="yes"] .verdict { color:#6FDDB0; }
+  .jurybox[data-verdict="no"] .verdict { color:#FF8FA3; }
+  .jurybox[data-verdict="unclear"] .verdict { color:#F2C26B; }
+  .readout p { margin:14px 0 0; color:var(--jury-muted); max-width:38ch; }
+
+  /* sections */
+  .grid { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,0.75fr); gap:40px; margin-top:44px; }
+  .grid > *, .hero > * { min-width:0; }
+  h2 { font-size:24px; font-weight:800; margin-bottom:14px; }
+  .list { border-top:1px solid var(--line); }
+  .item { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 4px; border-bottom:1px solid var(--line); cursor:pointer; background:none; border-left:0; border-right:0; border-top:0; width:100%; text-align:left; }
+  .item:hover .claim { text-decoration:underline; }
+  .item .id { color:var(--muted); width:34px; flex:none; font-variant-numeric:tabular-nums; }
+  .item .claim { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .status { flex:none; font-size:13px; font-weight:600; padding:3px 12px; border-radius:999px; }
+  .s-commit { background:var(--info-bg); } .s-reveal { background:var(--unclear-bg); color:var(--unclear); }
+  .s-settled { background:var(--yes-bg); color:var(--yes); } .s-void { background:var(--no-bg); color:var(--no); }
+  .empty { color:var(--muted); padding:18px 4px; }
+
+  .rank { display:grid; grid-template-columns:28px minmax(0,1fr) auto; gap:10px; padding:11px 4px; border-bottom:1px solid var(--line); align-items:center; }
+  .rank .n { color:var(--muted); font-variant-numeric:tabular-nums; }
+  .rank .sub { color:var(--muted); font-size:14px; }
+  .rank .pts { font:800 18px var(--display); font-variant-numeric:tabular-nums; }
+  .rank.me { background:var(--info-bg); border-radius:10px; }
+  .agree { margin-top:30px; }
+  .bar3 { display:flex; height:14px; border-radius:999px; overflow:hidden; background:var(--line); }
+  .bar3 span { display:block; height:100%; }
+  .legend { display:grid; gap:4px; margin-top:12px; font-size:14px; color:var(--muted); }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px; }
+
+  /* round panel */
+  #roundPanel { margin-top:44px; background:var(--surface); border-radius:20px; padding:32px; scroll-margin-top:16px; }
+  #roundPanel h2.claim { font-size:clamp(26px,3.6vw,40px); line-height:1.1; margin:6px 0 8px; }
+  .src { color:var(--muted); word-break:break-all; }
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:26px 0; padding:0; list-style:none; }
+  .steps li { display:flex; gap:10px; align-items:center; color:var(--muted); font-weight:600; padding:12px 14px; border-radius:12px; background:var(--field); }
+  .steps li b { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-size:13px; background:var(--line); color:var(--text); flex:none; }
+  .steps li.now { color:var(--text); background:var(--info-bg); } .steps li.now b { background:var(--ink); color:var(--on-ink); }
+  .steps li.done { color:var(--text); } .steps li.done b { background:var(--yes); color:#fff; }
+  .picks { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .pick input { position:absolute; opacity:0; } .pick { position:relative; }
+  .pick span { display:block; text-align:center; padding:18px 8px; border-radius:14px; border:2px solid var(--line); font:800 22px var(--display); cursor:pointer; background:var(--field); }
+  .pick.yes input:checked + span { border-color:var(--yes); background:var(--yes-bg); color:var(--yes); }
+  .pick.no input:checked + span { border-color:var(--no); background:var(--no-bg); color:var(--no); }
+  .pick.unclear input:checked + span { border-color:var(--unclear); background:var(--unclear-bg); color:var(--unclear); }
+  .confs { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-top:8px; }
+  .conf input { position:absolute; opacity:0; } .conf { position:relative; }
+  .conf span { display:block; text-align:center; padding:10px 0; border-radius:10px; border:1px solid var(--line); cursor:pointer; font-weight:600; background:var(--field); font-variant-numeric:tabular-nums; }
+  .conf input:checked + span { background:var(--ink); color:var(--on-ink); border-color:var(--ink); }
+  .conf input:focus-visible + span { outline:3px solid color-mix(in srgb, var(--text) 45%, transparent); outline-offset:2px; }
+  .payoff { display:flex; gap:24px; margin-top:14px; font-size:15px; flex-wrap:wrap; }
+  .payoff b { font:800 26px var(--display); margin-left:6px; font-variant-numeric:tabular-nums; }
+  .panel-label { font-weight:600; margin:22px 0 4px; }
+  .banner { padding:14px 16px; border-radius:12px; background:var(--info-bg); margin-top:6px; }
+  .banner.bad { background:var(--no-bg); } .banner.good { background:var(--yes-bg); }
+  .tablewrap { overflow-x:auto; }
+  table { width:100%; min-width:420px; border-collapse:collapse; margin-top:18px; }
+  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); font-size:15px; font-variant-numeric:tabular-nums; }
+  th { color:var(--muted); font-weight:600; }
+  .actions { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
+
+  /* transaction toast */
+  #toast { position:fixed; right:20px; bottom:20px; width:min(380px, calc(100vw - 40px)); background:var(--ink); color:var(--on-ink); border-radius:18px; padding:18px 18px 16px; z-index:20; display:none; }
+  #toast.on { display:block; }
+  #toast ul { list-style:none; margin:10px 0 0; padding:0; }
+  #toast li { padding:3px 0; opacity:.55; } #toast li.active, #toast li.done, #toast li.fail { opacity:1; }
+  #toast li::before { content:"○"; display:inline-block; width:24px; }
+  #toast li.active::before { content:"◐"; } #toast li.done::before { content:"●"; } #toast li.fail::before { content:"✕"; }
+  #toast .msg { margin-top:12px; padding-top:12px; border-top:1px solid color-mix(in srgb, var(--on-ink) 25%, transparent); white-space:pre-wrap; }
+  #toast .x { position:absolute; top:10px; right:12px; background:none; border:0; color:var(--on-ink); cursor:pointer; font-size:20px; opacity:.7; }
+
+  footer { margin-top:60px; color:var(--muted); font-size:14px; max-width:78ch; }
+  footer p { margin:0 0 10px; }
+
+  @media (max-width:860px) {
+    .hero, .grid { grid-template-columns:minmax(0,1fr); gap:28px; }
+    .jurybox { min-height:0; }
+    .steps { grid-template-columns:1fr; }
+    #roundPanel { padding:22px; }
+    .row2 { grid-template-columns:1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } .jurybox.anim .seat { animation:none; } }
+  .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div>
-      <h1>Beat the Jury</h1>
-      <p class="tag" style="margin-bottom:0">Predict what a jury of GenLayer validators will decide about a web page. Guesses are hidden until the reveal, and honest confidence scores best.</p>
+  <header class="bar">
+    <div class="brand">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="currentColor"/><circle cx="20" cy="26" r="7" fill="var(--yes)"/><circle cx="32" cy="26" r="7" fill="var(--yes)"/><circle cx="44" cy="26" r="7" fill="none" stroke="var(--unclear)" stroke-width="3"/><path d="M12 50c0-9 6-13 12-13h16c6 0 12 4 12 13z" fill="var(--bg)"/></svg>
+      Beat the Jury
     </div>
-    <div style="min-width:210px">
-      <label for="network" style="margin-top:0">Network</label>
+    <div class="conn">
+      <label class="sr" for="network">Network</label>
       <select id="network"><option value="studionet">GenLayer Studio</option><option value="bradbury">Bradbury testnet</option></select>
+      <button id="connBtn" class="chip-btn" type="button" aria-expanded="false" aria-controls="connection">Contract</button>
     </div>
   </header>
 
-  <div class="card" style="margin-top:16px">
-    <label for="address" style="margin-top:0">Game contract address on this network</label>
-    <input id="address" class="mono" placeholder="0x..." autocomplete="off" spellcheck="false">
-    <div id="netnote" class="muted" style="margin-top:6px"></div>
-    <div id="who" class="muted" style="margin-top:4px"></div>
+  <div id="connection">
+    <label for="address">Game contract address on this network</label>
+    <input id="address" placeholder="0x..." autocomplete="off" spellcheck="false">
+    <p id="netnote" class="note"></p>
+    <p id="who" class="note"></p>
   </div>
 
-  <div class="card">
-    <h2>Start a round</h2>
-    <label for="url">Public page URL (https only)</label>
-    <input id="url" placeholder="https://example.com/page" autocomplete="off" spellcheck="false">
-    <label for="claim">Claim about the page (up to 280 characters)</label>
-    <input id="claim" maxlength="280" placeholder="The page says that ..." autocomplete="off">
-    <label for="maxp">Number of players (the round opens for reveals when full)</label>
-    <select id="maxp"></select>
-    <button id="create">Create round</button>
-  </div>
+  <section class="hero">
+    <div>
+      <h1>Call the jury.</h1>
+      <p class="lede">Pick a claim on a public web page and guess how a panel of validators will rule. Lock in your guess, reveal it later, and score on how well your confidence matched what the jury did.</p>
+      <div class="field"><label for="url">Page to judge (https only)</label><input id="url" placeholder="https://example.com/page" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label for="claim">Claim about the page</label><input id="claim" maxlength="280" placeholder="The page says that ..." autocomplete="off"></div>
+      <div class="row2">
+        <div class="field"><label for="maxp">Players</label><select id="maxp"></select></div>
+        <div class="field" style="align-self:end"><button id="create" class="btn" style="width:100%" type="button">Create round</button></div>
+      </div>
+    </div>
 
-  <div class="card">
-    <div style="display:flex; align-items:center; justify-content:space-between"><h2 style="margin:0">Rounds</h2><button id="refresh" class="secondary" style="margin:0">Refresh</button></div>
-    <div id="rounds" style="margin-top:6px"><span class="muted">Enter a contract address to load rounds.</span></div>
-  </div>
+    <div id="jurybox" class="jurybox" data-verdict="" aria-live="polite">
+      <div class="seats" aria-hidden="true">
+        <div class="seat" style="--i:0"><svg viewBox="0 0 100 120"><g class="shape"><circle cx="50" cy="40" r="22"/><path d="M8 118c0-30 18-44 42-44s42 14 42 44z"/></g></svg></div>
+        <div class="seat" style="--i:1"><svg viewBox="0 0 100 120"><g class="shape"><circle cx="50" cy="40" r="22"/><path d="M8 118c0-30 18-44 42-44s42 14 42 44z"/></g></svg></div>
+        <div class="seat" style="--i:2"><svg viewBox="0 0 100 120"><g class="shape"><circle cx="50" cy="40" r="22"/><path d="M8 118c0-30 18-44 42-44s42 14 42 44z"/></g></svg></div>
+      </div>
+      <div class="readout"><div id="verdict" class="verdict">The jury is out.</div><p id="verdictNote">Open a round to seat the jury. Three jurors read the page, and their majority is the verdict.</p></div>
+    </div>
+  </section>
 
-  <div id="roundCard" class="card hidden"></div>
+  <section id="roundPanel" hidden></section>
 
-  <div id="txbox" class="card hidden"><h2>Transaction</h2><ul id="steps" style="list-style:none; padding:0; margin:0"></ul><div id="txmsg" class="notice"></div></div>
-
-  <div class="grid2">
-    <div class="card"><h2>Leaderboard</h2><div id="board"><span class="muted">No scores yet.</span></div></div>
-    <div class="card"><h2>How predictable is the jury?</h2><div id="stats"><span class="muted">No settled rounds yet.</span></div></div>
-  </div>
+  <section class="grid">
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline"><h2>Rounds</h2><button id="refresh" class="chip-btn" type="button">Refresh</button></div>
+      <div id="rounds" class="list"><div class="empty">Enter a contract address to load rounds.</div></div>
+    </div>
+    <div>
+      <h2>Leaderboard</h2>
+      <div id="board"><div class="empty">No scores yet. Settle a round to get on the board.</div></div>
+      <div class="agree">
+        <h2>How united is the jury?</h2>
+        <div id="stats"><div class="empty">No settled rounds yet.</div></div>
+      </div>
+    </div>
+  </section>
 
   <footer>
-    <p><strong>How it works:</strong> you pick a guess and a confidence, and only a hash of it goes on-chain. After everyone has committed, you reveal. Three juror readings of the page are taken by each validator and the majority is the verdict; validators must agree on the verdict, so wording never matters. Points follow a proper scoring rule, so being honest about your confidence pays best (0 to 340 per round).</p>
-    <p><strong>Limits:</strong> the jury is LLM readings of one page at one moment, so borderline claims can fail to settle and be retried. If you clear this browser's data before revealing, your secret is lost. On Studio the app uses a throwaway key kept in this browser, which holds no funds.</p>
+    <p><strong>How scoring works.</strong> Your guess is hidden until the reveal. You choose a confidence from 40% to 90%, and a proper scoring rule pays out up to 340 points per round. Being overconfident and wrong costs the most, so honest confidence scores best.</p>
+    <p><strong>Limits.</strong> The jury is LLM readings of one page at one moment, so borderline claims can fail to settle and need another try. If you clear this browser's data before revealing, your secret is lost and you score 0. On Studio this page uses a throwaway key kept in your browser that holds no funds.</p>
   </footer>
 </div>
+
+<aside id="toast" role="status" aria-live="polite">
+  <button class="x" id="toastClose" type="button" aria-label="Close">×</button>
+  <strong id="toastTitle">Working</strong>
+  <ul id="steps"></ul>
+  <div id="txmsg" class="msg" hidden></div>
+</aside>
 
 <script type="module">
 // ---------------------------------------------------------------- config
@@ -146,11 +281,8 @@ function pointsFor(guess, conf, verdict) {
   const err = guess === verdict ? 6 * (100 - conf) * (100 - conf) : 6 * conf * conf + 20000;
   return Math.floor((68600 - err) / 200);
 }
-const firmnessText = (f) => ({ 3: "unanimous jury", 2: "split 2 to 1", 1: "three-way split" }[f] || "");
-function badge(status) {
-  const m = { commit: ["b-info", "commit phase"], reveal: ["b-warn", "reveal phase"], settled: ["b-ok", "settled"], void: ["b-bad", "void"] }[status] || ["b-info", status];
-  return el("span", { class: "badge " + m[0], text: m[1] });
-}
+const STATUS_LABEL = { commit: "Taking guesses", reveal: "Reveal phase", settled: "Settled", void: "Void" };
+function statusChip(status) { return el("span", { class: "status s-" + status, text: STATUS_LABEL[status] || status }); }
 
 // ---------------------------------------------------------------- SDK and session
 let sdk = null, chains = null, types = null, net = CONFIG.defaultNetwork, session = null, busy = false, current = null;
@@ -210,34 +342,30 @@ async function write(fn, args, onStage) {
   return hash;
 }
 
-// ---------------------------------------------------------------- transaction UI
-const STEPS = [["sign", "Approve and send the transaction"], ["submit", "Submitted to the network"], ["done", "Validators finished"], ["check", "Result confirmed on-chain"]];
-function startTx() {
-  $("txbox").classList.remove("hidden"); const ul = $("steps"); ul.replaceChildren();
-  for (const [k, t] of STEPS) ul.append(el("li", { id: "st-" + k, text: "○  " + t, style: "color:var(--muted); padding:3px 0" }));
-  $("txmsg").className = "hidden"; $("txmsg").textContent = "";
+// ---------------------------------------------------------------- transaction toast
+const STEPS = [["sign", "Approve and send"], ["submit", "Submitted to the network"], ["done", "Validators finished"], ["check", "Confirmed on-chain"]];
+function startTx(title) {
+  $("toast").classList.add("on"); $("toastTitle").textContent = title || "Working";
+  const ul = $("steps"); ul.replaceChildren();
+  for (const [k, t] of STEPS) ul.append(el("li", { id: "st-" + k, text: t }));
+  $("txmsg").hidden = true; $("txmsg").textContent = "";
 }
-function mark(k, state) {
-  const li = $("st-" + k); if (!li) return;
-  const [sym, col] = { active: ["◐", "var(--accent)"], done: ["●", "var(--ok)"], fail: ["✕", "var(--bad)"] }[state];
-  li.textContent = sym + "  " + STEPS.find((s) => s[0] === k)[1]; li.style.color = col;
-}
-function say(text, kind) { const m = $("txmsg"); m.className = "notice " + ({ ok: "b-ok", bad: "b-bad", warn: "b-warn" }[kind] || "b-info"); m.textContent = text; }
-async function runTx(fn, args, verify, okMessage) {
+function mark(k, state) { const li = $("st-" + k); if (li) li.className = state; }
+function say(text) { const m = $("txmsg"); m.hidden = false; m.textContent = text; }
+async function runTx(title, fn, args, verify, okMessage) {
   if (busy) return; busy = true; document.querySelectorAll("button").forEach((b) => (b.disabled = true));
-  startTx();
+  startTx(title);
   try {
     contractAddress(); mark("sign", "active");
     await write(fn, args, (stage) => {
       if (stage === "submit") { mark("sign", "done"); mark("submit", "active"); }
       if (stage === "done") { mark("submit", "done"); mark("done", "done"); mark("check", "active"); }
     });
-    const good = await verify();
-    if (good) { mark("check", "done"); say(okMessage, "ok"); }
-    else { mark("check", "fail"); say("The transaction finished but nothing changed. The contract refused it (for example a wrong phase, the page could not be read, or validators could not agree on the jury). Try again, or check the round's state.", "warn"); }
+    if (await verify()) { mark("check", "done"); say(okMessage); }
+    else { mark("check", "fail"); say("The transaction finished but nothing changed, so the contract refused it. Common causes: the round is in a different phase, the page could not be read, or validators could not agree on the jury. Check the round's state and try again."); }
   } catch (e) {
-    for (const [k] of STEPS) { const li = $("st-" + k); if (li && li.style.color === "var(--accent)") mark(k, "fail"); }
-    say(friendly(e), "bad");
+    for (const [k] of STEPS) { const li = $("st-" + k); if (li && li.className === "active") li.className = "fail"; }
+    say(friendly(e));
   } finally { busy = false; document.querySelectorAll("button").forEach((b) => (b.disabled = false)); }
 }
 
@@ -246,20 +374,42 @@ const secretKey = (rid, addr) => ["jury.secret", net, $("address").value.trim().
 function saveSecret(rid, addr, obj) { try { localStorage.setItem(secretKey(rid, addr), JSON.stringify(obj)); } catch (e) {} }
 function loadSecret(rid, addr) { try { return JSON.parse(localStorage.getItem(secretKey(rid, addr))); } catch (e) { return null; } }
 
-// ---------------------------------------------------------------- views
+// ---------------------------------------------------------------- the jury box
+function renderJury(r) {
+  const box = $("jurybox"), seats = [...box.querySelectorAll(".seat")];
+  seats.forEach((s) => (s.className = "seat"));
+  box.classList.remove("anim"); box.dataset.verdict = "";
+  const v = $("verdict"), note = $("verdictNote");
+  if (!r) { v.textContent = "The jury is out."; note.textContent = "Open a round to seat the jury. Three jurors read the page, and their majority is the verdict."; return; }
+  if (r.status === "commit" || r.status === "reveal") {
+    v.textContent = r.status === "commit" ? "Taking guesses." : "Guesses are in.";
+    note.textContent = r.status === "commit" ? r.commit_count + " of " + r.max_players + " players have committed. The jury sits once everyone has revealed." : r.reveal_count + " of " + r.commit_count + " have revealed. Ask the jury when you are ready.";
+    return;
+  }
+  if (r.status === "void") { v.textContent = "No verdict."; note.textContent = "The page could not be read, so the jury never sat and nobody scored."; return; }
+  box.dataset.verdict = r.verdict;
+  const word = { yes: "Yes.", no: "No.", unclear: "Unclear." }[r.verdict];
+  v.textContent = word;
+  if (r.firmness === 3) { seats.forEach((s) => s.classList.add("lit")); note.textContent = "Unanimous. All three jurors agreed."; }
+  else if (r.firmness === 2) { seats[0].classList.add("lit"); seats[1].classList.add("lit"); seats[2].classList.add("dissent"); note.textContent = "Split 2 to 1. Two jurors agreed and one dissented."; }
+  else { seats.forEach((s) => s.classList.add("split")); note.textContent = "Three-way split. The jurors could not agree, so the verdict is unclear."; }
+  void box.offsetWidth; box.classList.add("anim");
+}
+
+// ---------------------------------------------------------------- lists
 async function loadRounds() {
   const box = $("rounds");
   try {
-    contractAddress(); box.replaceChildren(el("span", { class: "muted", text: "Loading..." }));
+    contractAddress(); box.replaceChildren(el("div", { class: "empty", text: "Loading rounds..." }));
     const n = Number(await read("count"));
-    if (n === 0) { box.replaceChildren(el("span", { class: "muted", text: "No rounds yet. Start one above." })); return; }
+    if (n === 0) { box.replaceChildren(el("div", { class: "empty", text: "No rounds yet. Create the first one above." })); return; }
     const items = await read("list_rounds", [BigInt(Math.max(0, n - 10)), BigInt(10)]);
     box.replaceChildren();
     for (const r of items.slice().reverse()) {
-      const row = el("div", { class: "item" }, [el("span", { class: "t", text: "#" + r.id + "  " + r.claim }), badge(r.status)]);
+      const row = el("button", { class: "item", type: "button" }, [el("span", { class: "id", text: "#" + r.id }), el("span", { class: "claim", text: r.claim }), statusChip(r.status)]);
       row.onclick = () => openRound(r.id); box.append(row);
     }
-  } catch (e) { box.replaceChildren(el("span", { class: "muted", text: friendly(e) })); }
+  } catch (e) { box.replaceChildren(el("div", { class: "empty", text: friendly(e) })); }
 }
 
 async function loadBoards() {
@@ -267,108 +417,123 @@ async function loadBoards() {
     contractAddress();
     const rows = await read("leaderboard", [BigInt(10)]);
     const b = $("board"); b.replaceChildren();
-    if (!rows.length) { b.append(el("span", { class: "muted", text: "No scores yet." })); }
-    else {
-      const t = el("table", {}, [el("tr", {}, ["#", "Player", "Points", "Rounds"].map((h) => el("th", { text: h })))]);
-      rows.forEach((r, i) => t.append(el("tr", {}, [String(i + 1), short(r.player), String(r.points), String(r.rounds)].map((x) => el("td", { text: x })))));
-      b.append(t);
-    }
+    if (!rows.length) b.append(el("div", { class: "empty", text: "No scores yet. Settle a round to get on the board." }));
+    const me = session ? session.address : "";
+    rows.forEach((r, i) => b.append(el("div", { class: "rank" + (r.player.toLowerCase() === me ? " me" : "") }, [
+      el("span", { class: "n", text: String(i + 1) }),
+      el("span", {}, [short(r.player) + (r.player.toLowerCase() === me ? " (you)" : ""), el("span", { class: "sub", text: "  " + r.rounds + (r.rounds === 1 ? " round" : " rounds") })]),
+      el("span", { class: "pts", text: String(r.points) })])));
     const s = await read("get_stats"); const sb = $("stats"); sb.replaceChildren();
-    if (!s.settled && !s.void) { sb.append(el("span", { class: "muted", text: "No settled rounds yet." })); return; }
-    const pct = (x) => (s.settled ? Math.round((100 * x) / s.settled) + "%" : "0%");
-    const t = el("table");
-    [["Rounds settled", s.settled], ["Unanimous (3 of 3)", s.unanimous + "  (" + pct(s.unanimous) + ")"], ["Split 2 to 1", s.majority_2_of_3 + "  (" + pct(s.majority_2_of_3) + ")"],
-     ["Three-way split", s.three_way_split + "  (" + pct(s.three_way_split) + ")"], ["Void (page unreadable)", s.void]].forEach(([k, v]) =>
-      t.append(el("tr", {}, [el("td", { text: k }), el("td", { text: String(v) })])));
-    sb.append(t);
-  } catch (e) { /* boards are optional until an address is set */ }
+    if (!s.settled) { sb.append(el("div", { class: "empty", text: s.void ? s.void + " void round" + (s.void === 1 ? "" : "s") + " so far." : "No settled rounds yet." })); return; }
+    const parts = [["All three jurors agreed", s.unanimous, "var(--yes)"], ["Two against one", s.majority_2_of_3, "var(--unclear)"], ["Three-way split", s.three_way_split, "var(--no)"]];
+    const bar = el("div", { class: "bar3", role: "img", "aria-label": "Jury agreement across " + s.settled + " settled rounds" });
+    parts.forEach(([, n, c]) => { const sp = el("span"); sp.style.width = (100 * n / s.settled) + "%"; sp.style.background = c; bar.append(sp); });
+    const legend = el("div", { class: "legend" });
+    parts.forEach(([label, n, c]) => { const i = el("i"); i.style.background = c; legend.append(el("div", {}, [i, label + ": " + n + (n === 1 ? " round" : " rounds") + " (" + Math.round(100 * n / s.settled) + "%)"])); });
+    sb.append(bar, legend);
+  } catch (e) { /* boards stay empty until an address is set */ }
 }
 
+// ---------------------------------------------------------------- round panel
 async function openRound(id) {
-  const card = $("roundCard"); card.classList.remove("hidden");
+  const panel = $("roundPanel"); panel.hidden = false;
   try {
     const r = await read("get_round", [BigInt(id)]);
-    current = r; await renderRound(r);
-    card.scrollIntoView({ behavior: "smooth", block: "start" });
-  } catch (e) { card.replaceChildren(el("div", { class: "notice b-bad", text: "Could not load round " + id + ": " + friendly(e) })); }
+    current = r; renderJury(r); await renderRound(r);
+  } catch (e) { renderJury(null); panel.replaceChildren(el("div", { class: "banner bad", text: "Could not load round " + id + ": " + friendly(e) })); }
+}
+
+function stepper(status) {
+  const idx = { commit: 0, reveal: 1, settled: 2, void: 2 }[status];
+  const names = ["Commit a guess", "Reveal it", "Hear the verdict"];
+  return el("ol", { class: "steps" }, names.map((n, i) => el("li", { class: i < idx ? "done" : i === idx ? (status === "settled" || status === "void" ? "done" : "now") : "" }, [el("b", { text: i < idx || ((status === "settled" || status === "void") && i === 2) ? "✓" : String(i + 1) }), n])));
 }
 
 async function renderRound(r) {
-  const card = $("roundCard"); card.replaceChildren();
-  card.append(el("div", { class: "muted", text: "Round " + r.id }), el("div", { class: "big", text: r.claim }));
-  card.append(isHttps(r.url) ? el("a", { href: r.url, text: r.url, target: "_blank", rel: "noopener noreferrer" }) : el("span", { text: r.url }));
-  card.append(el("div", { style: "margin-top:8px" }, [badge(r.status), el("span", { class: "muted", text: "   " + r.commit_count + " of " + r.max_players + " committed, " + r.reveal_count + " revealed" })]));
+  const panel = $("roundPanel"); panel.replaceChildren();
+  panel.append(el("div", { class: "src", text: "Round " + r.id }), el("h2", { class: "claim", text: r.claim }));
+  panel.append(isHttps(r.url) ? el("a", { class: "src", href: r.url, text: r.url, target: "_blank", rel: "noopener noreferrer" }) : el("span", { class: "src", text: r.url }));
+  panel.append(el("p", { class: "note", text: r.commit_count + " of " + r.max_players + " players committed, " + r.reveal_count + " revealed." }), stepper(r.status));
 
   const me = (session && session.address) || null;
   let mine = null;
   if (me) { try { mine = await read("get_entry", [BigInt(r.id), me]); } catch (e) {} }
-  const box = el("div", { style: "margin-top:12px" }); card.append(box);
+  const box = el("div"); panel.append(box);
+  const refreshAll = async () => { await openRound(r.id); loadRounds(); loadBoards(); };
 
   if (r.status === "commit") {
     if (mine && mine.committed) {
-      box.append(el("div", { class: "notice b-info", text: "You have committed. Your guess is hidden. Keep this browser, because the secret needed to reveal is stored here." }));
+      box.append(el("div", { class: "banner", text: "You have committed. Your guess is hidden. Keep this browser, because the secret you need to reveal is stored here." }));
     } else {
-      let pick = "yes";
-      box.append(el("label", { text: "Your guess for the jury's verdict", style: "margin-top:0" }));
-      const ch = el("div", { class: "choices" });
-      GUESSES.forEach((g) => { const c = el("div", { class: "choice" + (g === pick ? " on" : ""), text: g }); c.onclick = () => { pick = g; [...ch.children].forEach((x) => x.classList.toggle("on", x.textContent === g)); }; ch.append(c); });
-      box.append(ch, el("label", { text: "Confidence (honest is best: being overconfident and wrong costs the most)" }));
-      const conf = el("select"); CONFIDENCES.forEach((c) => conf.append(el("option", { value: String(c), text: c + "%", selected: c === 70 }))); box.append(conf);
-      const b = el("button", { text: "Commit my hidden guess" });
+      box.append(el("div", { class: "panel-label", text: "What will the jury decide?" }));
+      const picks = el("div", { class: "picks", role: "radiogroup" });
+      GUESSES.forEach((g, i) => { const inp = el("input", { type: "radio", name: "guess", value: g, checked: i === 0 }); picks.append(el("label", { class: "pick " + g }, [inp, el("span", { text: { yes: "Yes", no: "No", unclear: "Unclear" }[g] })])); });
+      box.append(picks, el("div", { class: "panel-label", text: "How sure are you?" }));
+      const confs = el("div", { class: "confs", role: "radiogroup" });
+      CONFIDENCES.forEach((c) => confs.append(el("label", { class: "conf" }, [el("input", { type: "radio", name: "conf", value: String(c), checked: c === 70 }), el("span", { text: c + "%" })])));
+      const payoff = el("div", { class: "payoff" });
+      const upd = () => {
+        const g = picks.querySelector("input:checked").value, c = Number(confs.querySelector("input:checked").value);
+        const other = GUESSES.find((x) => x !== g);
+        payoff.replaceChildren(el("span", {}, ["If the jury agrees", el("b", { text: "+" + pointsFor(g, c, g) })]), el("span", {}, ["If it does not", el("b", { text: "+" + pointsFor(g, c, other) })]));
+      };
+      picks.onchange = upd; confs.onchange = upd; upd();
+      box.append(confs, payoff);
+      const b = el("button", { class: "btn", type: "button", text: "Commit my guess" });
       b.onclick = async () => {
         try {
-          const s = await getSession(); const salt = randomSalt(); const confidence = Number(conf.value);
-          const hash = await sha256hex(r.id + "|" + pick + "|" + confidence + "|" + salt + "|" + s.address);
-          saveSecret(r.id, s.address, { guess: pick, confidence, salt });
-          await runTx("commit", [BigInt(r.id), hash], async () => { const e = await read("get_entry", [BigInt(r.id), s.address]); return e.committed; }, "Committed. Your guess is hidden until the reveal.");
-        } catch (e) { startTx(); say(friendly(e), "bad"); }
-        await openRound(r.id); loadRounds();
+          const s = await getSession(); const salt = randomSalt();
+          const guess = picks.querySelector("input:checked").value, confidence = Number(confs.querySelector("input:checked").value);
+          const hash = await sha256hex(r.id + "|" + guess + "|" + confidence + "|" + salt + "|" + s.address);
+          saveSecret(r.id, s.address, { guess, confidence, salt });
+          await runTx("Committing your guess", "commit", [BigInt(r.id), hash], async () => (await read("get_entry", [BigInt(r.id), s.address])).committed, "Committed. Your guess stays hidden until the reveal.");
+        } catch (e) { startTx("Committing your guess"); say(friendly(e)); }
+        await refreshAll();
       };
-      box.append(b);
+      box.append(el("div", { class: "actions" }, [b]));
     }
     if (me && r.creator.toLowerCase() === me && r.commit_count >= 1) {
-      const b = el("button", { class: "secondary", text: "Close commitments now" });
-      b.onclick = async () => { await runTx("close_commits", [BigInt(r.id)], async () => (await read("get_round", [BigInt(r.id)])).status === "reveal", "Commitments closed. Reveal phase is open."); await openRound(r.id); loadRounds(); };
-      box.append(b);
+      const b = el("button", { class: "btn ghost", type: "button", text: "Close guesses now" });
+      b.onclick = async () => { await runTx("Closing guesses", "close_commits", [BigInt(r.id)], async () => (await read("get_round", [BigInt(r.id)])).status === "reveal", "Guesses closed. The reveal phase is open."); await refreshAll(); };
+      box.append(el("div", { class: "actions" }, [b]));
     }
   }
 
   if (r.status === "reveal") {
+    const acts = el("div", { class: "actions" });
     if (mine && mine.committed && !mine.revealed) {
       const sec = loadSecret(r.id, me);
       if (sec) {
-        const b = el("button", { text: "Reveal my guess" });
-        b.onclick = async () => { await runTx("reveal", [BigInt(r.id), sec.guess, sec.confidence, sec.salt], async () => (await read("get_entry", [BigInt(r.id), me])).revealed, "Revealed."); await openRound(r.id); };
-        box.append(b);
-      } else box.append(el("div", { class: "notice b-bad", text: "This browser has no stored secret for this round, so your guess cannot be revealed. (Using a different browser or clearing data loses it.)" }));
-    } else if (mine && mine.revealed) box.append(el("div", { class: "notice b-info", text: "You revealed: " + mine.guess + " at " + mine.confidence + "%." }));
-    const b = el("button", { class: "secondary", text: "Ask the jury (settle the round)" });
-    b.onclick = async () => { await runTx("settle", [BigInt(r.id)], async () => ["settled", "void"].includes((await read("get_round", [BigInt(r.id)])).status), "The jury has spoken."); await openRound(r.id); loadRounds(); loadBoards(); };
-    box.append(b, el("div", { class: "muted", text: "Anyone can settle once everyone has revealed. The round creator can settle early. This takes a minute or two while validators read the page." }));
+        const b = el("button", { class: "btn", type: "button", text: "Reveal my guess" });
+        b.onclick = async () => { await runTx("Revealing your guess", "reveal", [BigInt(r.id), sec.guess, sec.confidence, sec.salt], async () => (await read("get_entry", [BigInt(r.id), me])).revealed, "Revealed."); await refreshAll(); };
+        acts.append(b);
+      } else box.append(el("div", { class: "banner bad", text: "This browser has no stored secret for this round, so your guess cannot be revealed. A different browser, or cleared data, loses it." }));
+    } else if (mine && mine.revealed) box.append(el("div", { class: "banner", text: "You revealed " + mine.guess + " at " + mine.confidence + "%." }));
+    const b = el("button", { class: "btn ghost", type: "button", text: "Ask the jury" });
+    b.onclick = async () => { await runTx("Asking the jury", "settle", [BigInt(r.id)], async () => ["settled", "void"].includes((await read("get_round", [BigInt(r.id)])).status), "The jury has ruled."); await refreshAll(); };
+    acts.append(b); box.append(acts, el("p", { class: "note", text: "Anyone can ask the jury once everyone has revealed, and the round creator can ask early. Validators read the page, so this takes a minute or two." }));
   }
 
   if (r.status === "settled" || r.status === "void") {
-    const v = r.status === "void" ? "void: the page could not be read, so no points were awarded." : "Jury verdict: " + r.verdict + " (" + firmnessText(r.firmness) + ")";
-    box.append(el("div", { class: "notice " + (r.status === "void" ? "b-bad" : "b-ok"), text: v }));
+    box.append(el("div", { class: "banner " + (r.status === "void" ? "bad" : "good"), text: r.status === "void" ? "Void. The page could not be read, so no points were awarded." : "The jury said " + r.verdict + "." }));
     const t = el("table", {}, [el("tr", {}, ["Player", "Guess", "Confidence", "Points"].map((h) => el("th", { text: h })))]);
     for (const p of r.players) {
       let e = { revealed: false }; try { e = await read("get_entry", [BigInt(r.id), p]); } catch (x) {}
       const pts = e.revealed && r.status === "settled" ? pointsFor(e.guess, e.confidence, r.verdict) : 0;
       t.append(el("tr", {}, [short(p) + (p === me ? " (you)" : ""), e.revealed ? e.guess : "did not reveal", e.revealed ? e.confidence + "%" : "", String(pts)].map((x) => el("td", { text: x }))));
     }
-    box.append(t);
+    box.append(el("div", { class: "tablewrap" }, [t]));
   }
 }
 
 // ---------------------------------------------------------------- actions
 async function createRound() {
   const url = $("url").value.trim(), claim = $("claim").value.trim(), maxp = Number($("maxp").value);
-  startTx();
-  if (!isHttps(url)) return say("The URL must start with https:// and contain no spaces.", "bad");
-  if (!claim || claim.length > 280) return say("The claim must be between 1 and 280 characters.", "bad");
+  if (!isHttps(url)) { startTx("Creating the round"); return say("The page address must start with https:// and contain no spaces."); }
+  if (!claim || claim.length > 280) { startTx("Creating the round"); return say("The claim must be between 1 and 280 characters."); }
   let before = 0;
-  try { before = Number(await read("count")); } catch (e) { return say(friendly(e), "bad"); }
-  await runTx("create_round", [url, claim, BigInt(maxp)], async () => Number(await read("count")) > before, "Round created.");
+  try { before = Number(await read("count")); } catch (e) { startTx("Creating the round"); return say(friendly(e)); }
+  await runTx("Creating the round", "create_round", [url, claim, BigInt(maxp)], async () => Number(await read("count")) > before, "Round created.");
   try { const n = Number(await read("count")); if (n > before) await openRound(n - 1); } catch (e) {}
   loadRounds();
 }
@@ -378,16 +543,20 @@ function applyNetwork() {
   let saved = ""; try { saved = localStorage.getItem("jury.address." + net) || ""; } catch (e) {}
   $("address").value = CONFIG.addresses[net] || saved;
   $("netnote").textContent = net === "studionet" ? "Studio is a sandbox. Writes use a throwaway account kept in this browser." : "Bradbury is a testnet. Writes use your browser wallet and need testnet GEN for gas.";
+  $("connBtn").textContent = $("address").value ? "Contract " + short($("address").value.trim()) : "Set contract";
 }
 function init() {
-  for (let i = 1; i <= 20; i++) $("maxp").append(el("option", { value: String(i), text: i === 1 ? "1 (solo practice)" : String(i), selected: i === 2 }));
+  for (let i = 1; i <= 20; i++) $("maxp").append(el("option", { value: String(i), text: i === 1 ? "1 (solo)" : String(i), selected: i === 2 }));
   const p = new URLSearchParams(location.search);
   if (["studionet", "bradbury"].includes(p.get("network"))) net = p.get("network");
-  applyNetwork(); if (p.get("address")) $("address").value = p.get("address");
-  $("network").onchange = () => { net = $("network").value; applyNetwork(); $("roundCard").classList.add("hidden"); loadRounds(); loadBoards(); };
-  $("address").onchange = () => { try { localStorage.setItem("jury.address." + net, $("address").value.trim()); } catch (e) {} loadRounds(); loadBoards(); };
+  applyNetwork(); if (p.get("address")) { $("address").value = p.get("address"); applyNetwork(); $("address").value = p.get("address"); }
+  $("connBtn").onclick = () => { const o = $("connection").classList.toggle("open"); $("connBtn").setAttribute("aria-expanded", String(o)); };
+  $("network").onchange = () => { net = $("network").value; applyNetwork(); $("roundPanel").hidden = true; renderJury(null); loadRounds(); loadBoards(); };
+  $("address").onchange = () => { try { localStorage.setItem("jury.address." + net, $("address").value.trim()); } catch (e) {} $("connBtn").textContent = "Contract " + short($("address").value.trim()); loadRounds(); loadBoards(); };
   $("create").onclick = createRound;
   $("refresh").onclick = () => { loadRounds(); loadBoards(); if (current) openRound(current.id); };
+  $("toastClose").onclick = () => $("toast").classList.remove("on");
+  if (!$("address").value) $("connection").classList.add("open");
   if (/^0x[0-9a-fA-F]{40}$/.test($("address").value.trim())) { loadRounds(); loadBoards(); }
 }
 init();
