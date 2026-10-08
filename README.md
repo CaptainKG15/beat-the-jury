@@ -7,7 +7,7 @@ Players guess what a jury of validators will decide about a claim on a public we
 Every settled round also records how united the jury was, so the game builds a public record of how predictable LLM validator juries are on borderline claims.
 
 ## Status
-Built and tested off-chain (80 checks), and played on GenLayer Studio. See `tests/attacks/RESULTS.md` for exactly what has been run on-chain.
+Built and tested off-chain (84 checks), and played on GenLayer Studio and Bradbury (see the notes on contract versions below). See `tests/attacks/RESULTS.md` for exactly what has been run on-chain.
 
 The contract source is kept small on purpose: a larger version (17,538 bytes) was refused by Bradbury with "gas limit too high" at deployment, so comments and explanations live in this README, not in the contract.
 
@@ -22,7 +22,7 @@ There is no clock. Every step is an explicit call, enforced by a state machine.
 A round ends `settled`, or `void` if the page could not be read (nobody scores).
 
 ## Consensus design
-The jury is three jurors with different styles (literal, strict evidence, reasonable reader). Each validator fetches the page, asks each juror for one of `yes`, `no`, `unclear`, and takes the majority as the verdict. `firmness` is the size of the majority: 3 unanimous, 2 split 2 to 1, 1 three-way split (settled as `unclear`).
+The jury is three jurors with different styles (literal, strict evidence, reasonable reader), asked together in a single model call per validator. Each validator fetches the page, gets one `yes`, `no` or `unclear` from each juror, and takes the majority as the verdict. If the model's answer cannot be parsed, the round settles as `unclear` with firmness 1, never as a made-up unanimous verdict. `firmness` is the size of the majority: 3 unanimous, 2 split 2 to 1, 1 three-way split (settled as `unclear`).
 
 Equivalence is a custom check using `gl.vm.run_nondet_unsafe`. The leader runs the jury. Each validator re-runs the whole jury itself and accepts the leader's result only if:
 - the verdict is identical, and
@@ -59,7 +59,15 @@ Views: `count`, `get_round`, `list_rounds`, `get_entry`, `leaderboard`, `get_sta
 
 `app/deploy.html` deploys the contract to Bradbury from the browser with a wallet and shows the SHA-256 of the source it deploys.
 
+## Speed on Bradbury and why the jury is one call
+The first version asked the model once per juror, so every validator made three sequential model calls. On Bradbury its first settle took roughly 10 to 15 minutes, and a second settle ended in a LEADER TIMEOUT (the validator chosen to run the jury did not finish in time; the round stayed in the reveal phase and nothing was lost). The jury was therefore changed to one model call that returns all three jurors' votes, and the page text is capped at 8,000 characters.
+
+The trade-off: the three votes now come from one response, so they are less independent than three separate calls. The verdict is still a majority of three, and firmness still records how united they were.
+
+Wait for a transaction to be accepted before trying again, and do not click `Ask the jury` twice. Bradbury was also very busy during testing, so some delay is the network and not the contract.
+
 ## Honest limitations
+- Only the first 8,000 characters of a page are read.
 - The jury is LLM readings of one page at one moment. Borderline claims can fail to settle (validators cannot agree) and need a retry.
 - If a player clears their browser data before revealing, their secret is lost and they score 0.
 - A creator can settle early and forfeit players who have not revealed. Players should reveal promptly.
@@ -67,11 +75,19 @@ Views: `count`, `get_round`, `list_rounds`, `get_entry`, `leaderboard`, `get_sta
 - There is no clock, so there are no deadlines, only phase changes.
 
 ## Tests
-- `python3 tests/test_logic.py`: 80 off-chain checks of the pure logic and the full round lifecycle with mocked jurors (settled, void, hostile page, three-way split, leader and validator disagreeing, wobble tolerance). Uses `tests/stub/genlayer.py`, a local stand-in for the SDK.
+- `python3 tests/test_logic.py`: 84 off-chain checks of the pure logic and the full round lifecycle with mocked jurors (settled, void, hostile page, three-way split, leader and validator disagreeing, wobble tolerance). Uses `tests/stub/genlayer.py`, a local stand-in for the SDK.
 - `node tests/frontend_parity.test.js`: confirms the page's scoring and commit hash match the contract exactly.
 - `STUDIO_TEST.md`: the on-chain test plan. Results go in `tests/attacks/RESULTS.md`.
 
 ## Deployment
-- Studio: `0xbDe7C028AFC84e8444e1d082f5d563B1eb6C07B0` (explorer: https://explorer-studio.genlayer.com/contracts/0xbDe7C028AFC84e8444e1d082f5d563B1eb6C07B0). This is an earlier, longer version of the contract (17,538 bytes, SHA-256 `36556f80d79aed08b86ee4a23dc36834b42dc283a1c545737be30305a30e8b88`) with the same logic and longer juror prompt wording.
-- Bradbury: `0xcc1A40b32221F8588385C38b2cfcfE620515d7CF` (explorer: https://explorer-bradbury.genlayer.com/address/0xcc1A40b32221F8588385C38b2cfcfE620515d7CF). Deployment transaction: `0x003970487bf55f38616b0a380ef86ccd645cb48558806eccffa4ac2865498c94` (https://explorer-bradbury.genlayer.com/tx/0x003970487bf55f38616b0a380ef86ccd645cb48558806eccffa4ac2865498c94). Source deployed: `contracts/beat_the_jury.py`, 11,622 bytes, SHA-256 `bb8c7ec416b714132eabd4839f0a3b8115bdce1f3d887b11d547b56f8baadb3b`.
+Current contract source: `contracts/beat_the_jury.py`, 11707 bytes, SHA-256 `ebbdd3c707ddf1fa111017d64d08b3692dfac129f77bcc87187dbde6f3b72e11` (one model call per settle).
+
+- Bradbury, current: (fill in after deploying)
 - Live app: https://captainkg15.github.io/beat-the-jury/app/ (defaults to Bradbury; the network menu switches to Studio, which needs no wallet)
+
+Earlier versions, kept for the record and superseded:
+- Bradbury, three-call version (11,622 bytes, SHA-256 `bb8c7ec416b714132eabd4839f0a3b8115bdce1f3d887b11d547b56f8baadb3b`): `0xcc1A40b32221F8588385C38b2cfcfE620515d7CF`, deployment transaction `0x003970487bf55f38616b0a380ef86ccd645cb48558806eccffa4ac2865498c94`. Its first settle was slow and a second ended in LEADER TIMEOUT.
+- Studio, one-call version (current source): `0xF0c12cbcD6EC82AE3d44c015Bdf00e60E4F646A7`. Its first clear-cut round settled unanimously; two Wikipedia rounds ended void because the page could not be read.
+- Studio, original three-call version (17,538 bytes, SHA-256 `36556f80d79aed08b86ee4a23dc36834b42dc283a1c545737be30305a30e8b88`): `0xbDe7C028AFC84e8444e1d082f5d563B1eb6C07B0`.
+
+`app/deploy.html` deploys the contract to Bradbury from the browser with a wallet and shows the SHA-256 of the source it deploys, so the deployed code can be compared with the file in this repo.

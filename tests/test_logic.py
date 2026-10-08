@@ -53,10 +53,11 @@ check("majority unanimous", j.majority(["yes", "yes", "yes"]) == ("yes", 3))
 check("majority 2 of 3", j.majority(["no", "yes", "no"]) == ("no", 2))
 check("three-way split is unclear firmness 1", j.majority(["yes", "no", "unclear"]) == ("unclear", 1))
 
-check("parse_verdict plain", j.parse_verdict('{"verdict": "no"}') == "no")
-check("parse_verdict fenced + chatter", j.parse_verdict('Sure ```json\n{"verdict":"yes"}\n```') == "yes")
-check("parse_verdict garbage -> unclear", j.parse_verdict("yes") == "unclear" and j.parse_verdict(None) == "unclear")
-check("parse_verdict bad value -> unclear", j.parse_verdict('{"verdict":"maybe"}') == "unclear")
+check("parse_votes plain", j.parse_votes('{"jurors": ["yes", "no", "unclear"]}') == ["yes", "no", "unclear"])
+check("parse_votes fenced + chatter", j.parse_votes('Sure ```json\n{"jurors":["no","no","no"]}\n```') == ["no", "no", "no"])
+check("parse_votes rejects garbage", j.parse_votes("yes") is None and j.parse_votes(None) is None and j.parse_votes("{}") is None)
+check("parse_votes rejects wrong count", j.parse_votes('{"jurors": ["yes", "no"]}') is None and j.parse_votes('{"jurors": ["yes","no","yes","no"]}') is None)
+check("parse_votes rejects bad value", j.parse_votes('{"jurors": ["yes", "maybe", "no"]}') is None)
 
 # The custom equivalence check
 ok = {"verdict": "yes", "firmness": 3}
@@ -80,7 +81,8 @@ check("input: empty claim rejected", raises(j.validate_round_inputs, "https://x.
 check("input: long claim rejected", raises(j.validate_round_inputs, "https://x.com", "a" * 281, 3))
 check("input: players 0 rejected", raises(j.validate_round_inputs, "https://x.com", "c", 0))
 check("input: players 21 rejected", raises(j.validate_round_inputs, "https://x.com", "c", 21))
-check("prompt delimits untrusted page", "<<<PAGE\nBODY\nPAGE>>>" in j.build_prompt("c", "BODY", "s") and "UNTRUSTED" in j.build_prompt("c", "BODY", "s"))
+check("prompt delimits untrusted page", "<<<PAGE\nBODY\nPAGE>>>" in j.build_prompt("c", "BODY") and "UNTRUSTED" in j.build_prompt("c", "BODY"))
+check("prompt asks all three jurors in one call", j.build_prompt("c", "BODY").count("Juror") == 3 and '"jurors"' in j.build_prompt("c", "BODY"))
 
 # ---------------------------------------------------------------- lifecycle with mocks
 A = Address("0xAaAaAaAaAaAaAaAaAaAaAaAaAaAaAaAaAaAaAaAa")
@@ -96,7 +98,8 @@ def fresh():
 def as_(addr):
     gl.message.sender_address = addr
 
-def mock_jury(page="Acme reported 12 million dollars.", answers=("yes", "yes", "yes", "yes", "yes", "yes")):
+def mock_jury(page="Acme reported 12 million dollars.", answers=(("yes", "yes", "yes"),)):
+    # Each model call (one per validator run) returns the next triple of juror votes, cycling.
     calls = {"n": 0, "web": 0}
     def render(url, mode="text"):
         calls["web"] += 1
@@ -105,7 +108,8 @@ def mock_jury(page="Acme reported 12 million dollars.", answers=("yes", "yes", "
     def prompt(p):
         a = answers[calls["n"] % len(answers)]
         calls["n"] += 1
-        return '{"verdict": "%s"}' % a
+        if a is None: return "I cannot decide"
+        return '{"jurors": ["%s", "%s", "%s"]}' % a
     gl.nondet.web.render = render
     gl.nondet.exec_prompt = prompt
     return calls
@@ -146,7 +150,7 @@ check("stats updated", c.get_stats()["settled"] == 1 and c.get_stats()["unanimou
 check("settled round cannot be settled again", raises(c.settle, rid, contains="not in reveal phase"))
 
 # creator closes early, unrevealed player scores zero but is counted
-c = fresh(); mock_jury(answers=("no",))
+c = fresh(); mock_jury(answers=(("no", "no", "no"),))
 as_(A); rid = c.create_round("https://x.com/p", "claim", 5)
 commit_for(c, A, rid, "no", 80, "s1"); commit_for(c, B, rid, "yes", 80, "s2")
 as_(B); check("non-creator cannot close commits", raises(c.close_commits, rid, contains="only the creator"))
@@ -173,20 +177,32 @@ check("hostile page never reached the jurors", calls["n"] == 0)
 check("attacker who guessed yes scores 0", c.leaderboard(5)[0]["points"] == 0)
 
 # split jury
-c = fresh(); mock_jury(answers=("yes", "no", "unclear"))
+c = fresh(); mock_jury(answers=(("yes", "no", "unclear"),))
 as_(A); rid = c.create_round("https://x.com/p", "claim", 1)
 commit_for(c, A, rid, "unclear", 40, "s"); c.reveal(rid, "unclear", 40, "s")
 check("three-way split settles unclear, firmness 1", c.settle(rid) == "unclear" and c.get_round(rid)["firmness"] == 1)
 check("split counted in stats", c.get_stats()["three_way_split"] == 1)
 
 # validator disagrees with leader -> consensus fails, state untouched
-c = fresh(); mock_jury(answers=("yes", "yes", "yes", "no", "no", "no"))
+c = fresh(); mock_jury(answers=(("yes", "yes", "yes"), ("no", "no", "no")))  # leader says yes, validator says no
 as_(A); rid = c.create_round("https://x.com/p", "claim", 1)
 commit_for(c, A, rid, "yes", 70, "s"); c.reveal(rid, "yes", 70, "s")
 check("leader and validator disagree: settle fails", raises(c.settle, rid, contains="consensus"))
 check("state unchanged after failed consensus", c.get_round(rid)["status"] == "reveal" and c.leaderboard(5) == [])
-mock_jury(answers=("yes", "yes", "yes", "yes", "yes", "unclear"))  # validator wobbles by one juror
+mock_jury(answers=(("yes", "yes", "yes"), ("yes", "yes", "unclear")))  # validator wobbles by one juror
 check("one-juror wobble is tolerated", c.settle(rid) == "yes")
+
+# one model call per validator run (the leader-timeout fix)
+c = fresh(); calls = mock_jury(answers=(("yes", "yes", "yes"),))
+as_(A); rid = c.create_round("https://x.com/p", "claim", 1)
+commit_for(c, A, rid, "yes", 70, "s"); c.reveal(rid, "yes", 70, "s"); c.settle(rid)
+check("settle makes exactly two model calls (leader + one validator), not six", calls["n"] == 2)
+
+# garbage model output: settled as unclear, firmness 1, never a made-up unanimous verdict
+c = fresh(); mock_jury(answers=(None,))
+as_(A); rid = c.create_round("https://x.com/p", "claim", 1)
+commit_for(c, A, rid, "yes", 70, "s"); c.reveal(rid, "yes", 70, "s")
+check("unparseable model answer settles unclear with firmness 1", c.settle(rid) == "unclear" and c.get_round(rid)["firmness"] == 1)
 
 # rounds listing + unknown round
 check("unknown round rejected", raises(c.get_round, 99, contains="unknown"))
