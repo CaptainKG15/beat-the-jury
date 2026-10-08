@@ -22,7 +22,7 @@ Contract `0xcc1A40b32221F8588385C38b2cfcfE620515d7CF` (11,622 bytes, SHA-256 `%s
 Finding: asking the model three times per validator was too heavy for Bradbury's leader time limit, and the network was also very busy (over 24,000 transactions listed). The contract was changed to one model call per settle (current source, 84 off-chain checks). **None of the rounds above were run on the one-call version.** Runs on the new Bradbury deployment are listed below once played.
 
 ## Bradbury, one-call version (current)
-Not deployed or played yet when this file was written.
+Deployed at `0xeC5Ac349cB2eEF18Be2f581D703bD3481d711645` (source SHA-256 `ebbdd3c707ddf1fa111017d64d08b3692dfac129f77bcc87187dbde6f3b72e11`, as listed in the README). The deployment was accepted. No rounds have been played on it yet when this file was written, so nothing is claimed for it.
 
 ## Observations
 - Round 2 was a hostile page. The contract's design settles such a page as `unclear` with firmness 3 without asking the jurors (checked in the off-chain tests). On-chain I observed the `unclear` verdict, the zero score, and the agreement record moving from 1 unanimous, 1 split to 2 unanimous, 1 split. I did not observe whether the jurors were consulted.

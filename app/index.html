@@ -238,7 +238,7 @@
 // ---------------------------------------------------------------- config
 // Fill in the deployed contract addresses, or use ?network=bradbury&address=0x...
 const CONFIG = {
-  addresses: { studionet: "0xF0c12cbcD6EC82AE3d44c015Bdf00e60E4F646A7", bradbury: "0xcc1A40b32221F8588385C38b2cfcfE620515d7CF" },
+  addresses: { studionet: "0xF0c12cbcD6EC82AE3d44c015Bdf00e60E4F646A7", bradbury: "0xeC5Ac349cB2eEF18Be2f581D703bD3481d711645" },
   chainKeys: { studionet: "studionet", bradbury: "testnetBradbury" },
   defaultNetwork: "bradbury",
 };
@@ -514,7 +514,7 @@ async function renderRound(r) {
     } else if (mine && mine.revealed) box.append(el("div", { class: "banner", text: "You revealed " + mine.guess + " at " + mine.confidence + "%." }));
     const b = el("button", { class: "btn ghost", type: "button", text: "Ask the jury" });
     b.onclick = async () => { await runTx("Asking the jury", "settle", [BigInt(r.id)], async () => ["settled", "void"].includes((await read("get_round", [BigInt(r.id)])).status), "The jury has ruled."); await refreshAll(); };
-    acts.append(b); box.append(acts, el("p", { class: "note", text: "Anyone can ask the jury once everyone has revealed, and the round creator can ask early. Validators read the page, so this takes a minute or two." }));
+    acts.append(b); box.append(acts, el("p", { class: "note", text: "Anyone can ask the jury once everyone has revealed, and the round creator can ask early. Validators read the page, so this can take a few minutes, and longer on a busy Bradbury." }));
   }
 
   if (r.status === "settled" || r.status === "void") {

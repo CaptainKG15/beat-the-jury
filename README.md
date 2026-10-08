@@ -82,7 +82,7 @@ Wait for a transaction to be accepted before trying again, and do not click `Ask
 ## Deployment
 Current contract source: `contracts/beat_the_jury.py`, 11707 bytes, SHA-256 `ebbdd3c707ddf1fa111017d64d08b3692dfac129f77bcc87187dbde6f3b72e11` (one model call per settle).
 
-- Bradbury, current: (fill in after deploying)
+- Bradbury, current: `0xeC5Ac349cB2eEF18Be2f581D703bD3481d711645` (explorer: https://explorer-bradbury.genlayer.com/address/0xeC5Ac349cB2eEF18Be2f581D703bD3481d711645). Deployment transaction: `0xf0807cb1da93eabb86677f0b6c3b1a71eb9cd8fa87540a99c4fa1bf23d9f3234` (https://explorer-bradbury.genlayer.com/tx/0xf0807cb1da93eabb86677f0b6c3b1a71eb9cd8fa87540a99c4fa1bf23d9f3234).
 - Live app: https://captainkg15.github.io/beat-the-jury/app/ (defaults to Bradbury; the network menu switches to Studio, which needs no wallet)
 
 Earlier versions, kept for the record and superseded:
