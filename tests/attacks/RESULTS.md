@@ -1,4 +1,4 @@
-# On-chain results (GenLayer Studio)
+# On-chain results
 
 Studio rounds below were played on an earlier, longer version of the contract on GenLayer Studio (17,538 bytes, SHA-256 `36556f80d79aed08b86ee4a23dc36834b42dc283a1c545737be30305a30e8b88`). That version asked the model three times per validator (one call per juror), so it is not the current logic. The current contract makes one model call per settle; its on-chain runs are in the Bradbury and Studio sections below.
 Only what was actually observed is listed. Failures and surprises belong here too.
@@ -35,6 +35,8 @@ Finding: asking the model three times per validator was too heavy for Bradbury's
 ## Bradbury, one-call version (current)
 Contract `0xeC5Ac349cB2eEF18Be2f581D703bD3481d711645`, deployed from `contracts/beat_the_jury.py` (11,707 bytes, SHA-256 `ebbdd3c707ddf1fa111017d64d08b3692dfac129f77bcc87187dbde6f3b72e11`). Played through the web app with a browser wallet, solo mode.
 
+**Summary for this contract:** 8 rounds created, 4 settled (all counted in the leaderboard total of 951), 1 void, and 3 not settled when checked (all three on the long Solana page).
+
 | Round | Source | Claim | Guess | Verdict | Firmness | Points | Notes |
 |-------|--------|-------|-------|---------|----------|--------|-------|
 | 0 | `witness/tests/hostile_pages/01_clean_control.html` | Acme reported 12 million dollars of Q3 revenue | yes at 70% | yes | 3 (unanimous) | 316 | Matches the scoring rule: (68600 - 5400) / 200 = 316. The settle succeeded with no leader timeout. |
@@ -44,18 +46,19 @@ Contract `0xeC5Ac349cB2eEF18Be2f581D703bD3481d711645`, deployed from `contracts/
 | 4 | `does-not-exist.invalid/page` | The page exists | yes at 70% | void | 0 | 0 | The address cannot be fetched. The round ended void, no points were awarded, and neither the leaderboard nor the agreement counts changed. |
 | 5 | `en.wikipedia.org/wiki/Solana_(blockchain_platform)` | Solana is the biggest crypto coin | unclear at 50% | not settled | n/a | n/a | A retry of round 2. The settle transaction was accepted by the network but the explorer showed VALIDATORS TIMEOUT for the newest settle (the leader finished, the other validators did not finish re-running the jury in time), and the round stayed in the reveal phase. Not counted as a result. |
 | 6 | `beat-the-jury/tests/pages/borderline.html` (two-line page: "approximately 12 million dollars, subject to final audit", with a note that up to 2 million may be reclassified) | Acme's Q3 revenue was 12 million dollars | unclear at 60% | unclear | 1 (three-way split, from the agreement bar) | 295 | A genuinely ambiguous claim on a short page. The jurors did not agree, so the verdict is unclear. Matches the scoring rule: (68600 - 9600) / 200 = 295, and the leaderboard moved from 656 to 951. The explorer showed a VALIDATORS TIMEOUT for a settle shortly before; it was probably this round's first settle (not confirmed), and the settle sent afterwards succeeded. |
+| 7 | `en.wikipedia.org/wiki/Solana_(blockchain_platform)` | Solana is a blockchain platform | yes at 90% | not settled when checked | n/a | n/a | A clear claim on the same long page, to separate page length from ambiguity. After Ask the jury the page said the transaction was accepted but the round stayed in the reveal phase. The explorer banner for this settle was not checked, so the cause is unknown. Not counted as a result. |
 
 Timing: in round 0 the commit step alone took about 7 minutes, and that step makes no model calls, so Bradbury was slow at that moment whatever the contract does; the settle time was not recorded. In round 1 the tester reported the settle took about 2 minutes. These are two single runs on a network whose load varies, so no general speed claim is made.
 
 Page behaviour noted in this run: after the settle, the page's progress panel said the transaction "finished but nothing changed" while the round already showed Settled. Either the page checked before Bradbury's state had caught up, or a second Ask the jury click was refused on an already-settled round. The tester confirmed having clicked Ask the jury more than once, so the message was most likely about a refused second settle. The page now keeps checking for up to a minute before reporting a problem, and warns before a second settle is sent.
 
 ## Observations
-- Settle timeouts are not explained by page length alone. A long Wikipedia article (Solana) never settled in several tries on Bradbury (one ended in VALIDATORS TIMEOUT) and voided twice on Studio, but a two-line ambiguous page also hit a VALIDATORS TIMEOUT once and then settled on a retry, while clear claims settled on the first try. One possible explanation is that validators sometimes reach different verdicts on ambiguous claims and the network retries until they agree; another is slow page fetches. Neither is confirmed: the validators' individual votes were not inspected. The contract was not changed during review.
-- Round 2 was a hostile page. The contract's design settles such a page as `unclear` with firmness 3 without asking the jurors (checked in the off-chain tests). On-chain I observed the `unclear` verdict, the zero score, and the agreement record moving from 1 unanimous, 1 split to 2 unanimous, 1 split. I did not observe whether the jurors were consulted.
-- Two Wikipedia rounds ended void on Studio (the page could not be read), but a Wikipedia page was read fine on Bradbury. One working round does not show the cause, so the README only says that some sites may block validators.
+- Settles that did not complete (Bradbury, current contract): the long Solana article failed three times (rounds 2, 5 and 7, one of them confirmed as VALIDATORS TIMEOUT on the explorer), and that includes round 7, a clear claim. A short ambiguous page (round 6) also hit a VALIDATORS TIMEOUT once and then settled on a retry. Clear claims on short or medium pages (rounds 0 and 1) settled. So page length and ambiguity may both contribute, and neither is confirmed: the validators' individual votes were not inspected, and the Studio voids on the same article may have a different cause. The contract was not changed during review.
+- On Studio (original three-call version), round 2 was a hostile page. The contract's design settles such a page as `unclear` with firmness 3 without asking the jurors (checked in the off-chain tests). On-chain it was observed that the verdict was `unclear`, the score was zero, and the agreement record moved from 1 unanimous, 1 split to 2 unanimous, 1 split. Whether the jurors were consulted was not observed.
+- Two Solana rounds ended void on Studio (the page could not be read), but a different Wikipedia page (Fernando Torres) was read fine on Bradbury. One working round does not show the cause.
 - The agreement bar briefly showed the old counts right after a settle and corrected itself on refresh. It is a display lag in the page, not a contract counter problem.
 - The full commit, reveal and settle flow completed on real validators, including the custom leader and validator comparison.
-- On the borderline claim the verdict was settled by a 2 to 1 majority. This is the behaviour the firmness tolerance is meant to allow.
+- On Studio (original three-call version), the borderline Solana claim in round 1 was settled by a 2 to 1 majority. This is the behaviour the firmness tolerance is meant to allow.
 - While the settle transaction was running, a separate read of the rounds list returned "An unknown RPC error occurred". It cleared on refresh. The page now shows a friendlier message in that case.
 
 ## Not yet run
