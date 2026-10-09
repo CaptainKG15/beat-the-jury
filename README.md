@@ -64,9 +64,33 @@ The first version asked the model once per juror, so every validator made three 
 
 The trade-off: the three votes now come from one response, so they are less independent than three separate calls. The verdict is still a majority of three, and firmness still records how united they were.
 
-In the first test of the one-call version, a settle on Bradbury succeeded with no leader timeout; this is one run, not a guarantee, and even the simple commit step took about 7 minutes at the time because the network was slow.
+In the first tests of the one-call version, settles on Bradbury succeeded with no leader timeout. One was reported at about 2 minutes, while in another run even the simple commit step took about 7 minutes because the network was slow. These are single runs, not guarantees.
 
 Wait for a transaction to be accepted before trying again. A second `Ask the jury` on an already-settled round is refused by the contract and only wastes gas, so the page remembers a sent settle for 20 minutes (in that browser) and warns and asks for confirmation before sending another. Bradbury was also very busy during testing, so some delay is the network and not the contract.
+
+## Trust model and jury integrity
+What this project is for: a low-stakes testbed that measures how predictable a validator jury is on subjective claims, using a contract design (hidden guesses, exact scoring, a custom equivalence check) that would carry over to higher-stakes uses such as dispute or escrow settlement. **The stakes here are modest on purpose: no funds are at risk, only points on a leaderboard.** It does not claim to solve a high-value trust problem by itself.
+
+What the contract does guarantee, and what a player or reviewer can check:
+- **Nobody picks the verdict.** The round creator chooses the page and claim, but the verdict comes from validators re-running the jury, and the leader's result is accepted only if validators reproduce the same verdict (`jury_accepts`). A leader cannot force a result through.
+- **Guesses cannot be copied.** A guess is stored as a hash of the round, guess, confidence, a private salt and the player's address, and must be revealed to match exactly.
+- **Scoring is auditable code.** Points come from an integer proper scoring rule, so there is no discretion in awarding them.
+- **The jury's reliability is recorded.** Every settled round updates counts of unanimous, 2-to-1 and three-way-split verdicts, and unreadable pages are recorded as void.
+
+Known integrity limits, stated plainly:
+
+| Limit | Effect | Status |
+|-------|--------|--------|
+| The three jurors are one model call | They are correlated, not independent. A 3-of-3 verdict is weaker evidence than three separate models. | A three-call version timed out on Bradbury, so this was a deliberate trade-off. |
+| One model family | A shared model bias passes straight into every verdict. | Not addressed. |
+| The leaderboard is not sybil-resistant | Anyone can run solo rounds on easy claims and farm points. Points have no value, but the leaderboard should not be read as a skill ranking. | Not addressed. A fix would be to score only rounds with two or more independent players. |
+| Players can read the page | Clear-cut claims are easy to predict. The game is only informative on borderline claims. | By design. |
+| The creator controls the claim and can settle early | A creator can pick a claim they know the answer to, and early settlement forfeits players who have not revealed. | Not addressed. |
+| Hostile pages | Only a prompt instruction and a pattern check defend against them. A subtle injection could get through. | Partly addressed. Tested with a small set of pages, not an audit. |
+| Large pages | Every validator must fetch the whole page and ask the model within a time limit. A long Wikipedia article ended in VALIDATORS TIMEOUT on Bradbury and voided on Studio, while short pages settled. Likely cause only, not confirmed. | Observed. Not addressed; short pages work. |
+| Pages change between fetches | Validators may disagree, so a round can fail to settle. | Observed on Bradbury as leader timeouts in the first version. |
+
+Possible next steps, if the project is accepted and extended: score only multi-player rounds, add a cost or cap on round creation, and use independent jurors again if Bradbury's time limits allow.
 
 ## Honest limitations
 - Only the first 8,000 characters of a page are read.
