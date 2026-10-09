@@ -87,7 +87,7 @@ Known integrity limits, stated plainly:
 | Players can read the page | Clear-cut claims are easy to predict. The game is only informative on borderline claims. | By design. |
 | The creator controls the claim and can settle early | A creator can pick a claim they know the answer to, and early settlement forfeits players who have not revealed. | Not addressed. |
 | Hostile pages | Only a prompt instruction and a pattern check defend against them. A subtle injection could get through. | Partly addressed. Tested with a small set of pages, not an audit. |
-| Large pages | Every validator must fetch the whole page and ask the model within a time limit. A long Wikipedia article ended in VALIDATORS TIMEOUT on Bradbury and voided on Studio, while short pages settled. Likely cause only, not confirmed. | Observed. Not addressed; short pages work. |
+| Settles can time out | A settle can end in VALIDATORS TIMEOUT on Bradbury. Seen on a long Wikipedia article (never settled in several tries) and once on a short ambiguous page (settled on a retry). Clear claims settled first time. Possible causes: validators reaching different verdicts on ambiguous claims, or slow fetches. Not confirmed. | Observed. Not addressed. Ambiguous claims may need a retry. |
 | Pages change between fetches | Validators may disagree, so a round can fail to settle. | Observed on Bradbury as leader timeouts in the first version. |
 
 Possible next steps, if the project is accepted and extended: score only multi-player rounds, add a cost or cap on round creation, and use independent jurors again if Bradbury's time limits allow.
