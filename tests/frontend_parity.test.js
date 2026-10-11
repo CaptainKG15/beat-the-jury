@@ -1,7 +1,8 @@
 // Checks that the web page's scoring and commit hash match the contract's Python helpers.
 // Run: node tests/frontend_parity.test.js   (needs python3 on PATH)
 const fs = require("fs"), path = require("path"), assert = require("assert"), { execFileSync } = require("child_process"), crypto = require("crypto");
-const html = fs.readFileSync(path.join(__dirname, "..", "app", "index.html"), "utf8");
+for (const page of ["index.html", path.join("v2", "index.html")]) {
+const html = fs.readFileSync(path.join(__dirname, "..", "app", page), "utf8");
 const js = html.match(/<script type="module">([\s\S]*?)<\/script>/)[1];
 const grab = (name) => js.match(new RegExp("(function " + name + "\\([\\s\\S]*?\\n}\\n)"))[1];
 const GUESSES = ["yes", "no", "unclear"], CONFIDENCES = [40, 50, 60, 70, 80, 90];
@@ -20,3 +21,5 @@ const jsHash = crypto.createHash("sha256").update(["7", "unclear", "60", "s4lt",
 const pyHash = py(`import beat_the_jury as j; print(j.commitment_for(7, "unclear", 60, "s4lt", "${addr}"))`);
 assert.strictEqual(jsHash, pyHash);
 console.log("commit hash parity: JS and contract produce the same hash");
+console.log("checked page:", page);
+}

@@ -68,6 +68,14 @@ In the first tests of the one-call version, settles on Bradbury succeeded with n
 
 Wait for a transaction to be accepted before trying again. A second `Ask the jury` on an already-settled round is refused by the contract and only wastes gas, so the page remembers a sent settle for 20 minutes (in that browser) and warns and asks for confirmation before sending another. Bradbury was also very busy during testing, so some delay is the network and not the contract.
 
+## Version 2 (Milestone, in progress)
+Two changes, both aimed at problems recorded in `tests/attacks/RESULTS.md`:
+
+1. **Lighter page fetch.** Version 1 loaded every page in a full browser, and long pages (a large Wikipedia article) never settled on Bradbury. Version 2 first asks for the page with a plain HTTP request, extracts the paragraph text, and only falls back to the browser fetch if the plain request fails, returns a non-200 status, or yields almost no text. If the plain request does not work on the live network, the contract behaves like version 1. Whether it actually helps on Bradbury is not known until it has been run there.
+2. **Practice rounds do not feed the leaderboard.** A round only credits the leaderboard when two or more players revealed. Solo rounds still settle, still show points, and still count in the jury-reliability record, but they cannot be farmed for leaderboard points. This does not stop one person using two accounts; it only raises the effort.
+
+Also removed to stay under the size Bradbury accepts: the `list_rounds` view (the page reads rounds one at a time), and the contract is indented with two spaces. Behaviour of scoring, commit-reveal and the jury is unchanged.
+
 ## Trust model and jury integrity
 What this project is for: a low-stakes testbed that measures how predictable a validator jury is on subjective claims, using a contract design (hidden guesses, exact scoring, a custom equivalence check) that would carry over to higher-stakes uses such as dispute or escrow settlement. **The stakes here are modest on purpose: no funds are at risk, only points on a leaderboard.** It does not claim to solve a high-value trust problem by itself.
 
@@ -101,12 +109,16 @@ Possible next steps, if the project is accepted and extended: score only multi-p
 - There is no clock, so there are no deadlines, only phase changes.
 
 ## Tests
-- `python3 tests/test_logic.py`: 84 off-chain checks of the pure logic and the full round lifecycle with mocked jurors (settled, void, hostile page, three-way split, leader and validator disagreeing, wobble tolerance). Uses `tests/stub/genlayer.py`, a local stand-in for the SDK.
+- `python3 tests/test_logic.py`: 103 off-chain checks (version 2; version 1 had 84) of the pure logic and the full round lifecycle with mocked jurors (settled, void, hostile page, three-way split, leader and validator disagreeing, wobble tolerance). Uses `tests/stub/genlayer.py`, a local stand-in for the SDK.
 - `node tests/frontend_parity.test.js`: confirms the page's scoring and commit hash match the contract exactly.
 - `STUDIO_TEST.md`: the on-chain test plan. Results go in `tests/attacks/RESULTS.md`.
 
 ## Deployment
-Current contract source: `contracts/beat_the_jury.py`, 11707 bytes, SHA-256 `ebbdd3c707ddf1fa111017d64d08b3692dfac129f77bcc87187dbde6f3b72e11` (one model call per settle).
+**Version 1 (accepted, deployed):** source `contracts/v1/beat_the_jury.py`, 11,707 bytes, SHA-256 `ebbdd3c707ddf1fa111017d64d08b3692dfac129f77bcc87187dbde6f3b72e11` (one model call per settle). Its page is `app/index.html`.
+
+**Version 2 (Milestone, see MILESTONE.md):** source `contracts/beat_the_jury.py`, 11374 bytes, SHA-256 `a50807faccca53dc056ab1f61f11435c48b696b4419a1299b4cff794ea874fa3`. Not deployed yet when this was written. Its page is `app/v2/index.html`.
+
+The lines below describe version 1 unless they say otherwise.
 
 - Bradbury, current: `0xeC5Ac349cB2eEF18Be2f581D703bD3481d711645` (explorer: https://explorer-bradbury.genlayer.com/address/0xeC5Ac349cB2eEF18Be2f581D703bD3481d711645). Deployment transaction: `0xf0807cb1da93eabb86677f0b6c3b1a71eb9cd8fa87540a99c4fa1bf23d9f3234` (https://explorer-bradbury.genlayer.com/tx/0xf0807cb1da93eabb86677f0b6c3b1a71eb9cd8fa87540a99c4fa1bf23d9f3234).
 - Live app: https://captainkg15.github.io/beat-the-jury/app/ (defaults to Bradbury; the network menu switches to Studio, which needs no wallet)

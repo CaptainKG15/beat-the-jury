@@ -3,7 +3,7 @@
 Run in GenLayer Studio first. Record every result honestly, including failures, in `tests/attacks/RESULTS.md`.
 
 ## 0. Deploy
-1. In Studio create `beat_the_jury.py`, paste `contracts/beat_the_jury.py`, open Run and Debug, deploy with no arguments.
+1. In Studio create `beat_the_jury.py`, paste `contracts/v1/beat_the_jury.py` (version 1) or `contracts/beat_the_jury.py` (version 2; see STUDIO_TEST_V2.md), open Run and Debug, deploy with no arguments.
 2. If Studio rejects the schema, copy the exact error. The likeliest causes are the public method types and anything using `typing.Any`.
 3. Call `count` (expect 0) and `get_stats` (all zeros).
 

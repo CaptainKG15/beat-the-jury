@@ -12,7 +12,7 @@ Only what was actually observed is listed. Failures and surprises belong here to
 After these three rounds the contract's jury-agreement record read: 2 unanimous, 1 split 2 to 1, 0 three-way splits, 0 void.
 
 ## Studio, one-call version
-Contract `0xF0c12cbcD6EC82AE3d44c015Bdf00e60E4F646A7`, deployed from the current source (SHA-256 `ebbdd3c707ddf1fa111017d64d08b3692dfac129f77bcc87187dbde6f3b72e11`). Played through the web app, solo mode.
+Contract `0xF0c12cbcD6EC82AE3d44c015Bdf00e60E4F646A7`, deployed from the version 1 source, `contracts/v1/beat_the_jury.py` (SHA-256 `ebbdd3c707ddf1fa111017d64d08b3692dfac129f77bcc87187dbde6f3b72e11`). Played through the web app, solo mode.
 
 | Round | Source | Claim | Guess | Verdict | Firmness | Points | Notes |
 |-------|--------|-------|-------|---------|----------|--------|-------|
@@ -33,7 +33,7 @@ Contract `0xcc1A40b32221F8588385C38b2cfcfE620515d7CF` (11,622 bytes, SHA-256 `bb
 Finding: asking the model three times per validator was too heavy for Bradbury's leader time limit, and the network was also very busy (over 24,000 transactions listed). The contract was changed to one model call per settle (current source, 84 off-chain checks). **None of the rounds above were run on the one-call version.** Runs on the new Bradbury deployment are listed below.
 
 ## Bradbury, one-call version (current)
-Contract `0xeC5Ac349cB2eEF18Be2f581D703bD3481d711645`, deployed from `contracts/beat_the_jury.py` (11,707 bytes, SHA-256 `ebbdd3c707ddf1fa111017d64d08b3692dfac129f77bcc87187dbde6f3b72e11`). Played through the web app with a browser wallet, solo mode.
+Contract `0xeC5Ac349cB2eEF18Be2f581D703bD3481d711645`, deployed from `contracts/v1/beat_the_jury.py` (11,707 bytes, SHA-256 `ebbdd3c707ddf1fa111017d64d08b3692dfac129f77bcc87187dbde6f3b72e11`). Played through the web app with a browser wallet, solo mode.
 
 **Summary for this contract:** 8 rounds created, 4 settled (all counted in the leaderboard total of 951), 1 void, and 3 not settled when checked (all three on the long Solana page).
 
@@ -68,3 +68,8 @@ Page behaviour noted in this run: after the settle, the page's progress panel sa
 - Rule refusals on the live contract: double commit, wrong reveal, early settle by a non-creator
 - Repeating the same borderline claim several times to see how often the verdict and firmness change
 - Any independent audit of the injection defences; only a small set of pages has been tried
+
+## Version 2 (Milestone)
+Source `contracts/beat_the_jury.py`, 11374 bytes, SHA-256 `a50807faccca53dc056ab1f61f11435c48b696b4419a1299b4cff794ea874fa3`. Changes: plain HTTP fetch with browser fallback, and practice rounds (fewer than two revealed players) do not credit the leaderboard. See MILESTONE.md.
+
+**Not deployed or played on-chain yet when this was written. Nothing is claimed for it beyond the 103 off-chain checks.** Results will be listed here as they are played, failures included.
