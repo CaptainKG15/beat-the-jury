@@ -116,7 +116,7 @@ Possible next steps, if the project is accepted and extended: score only multi-p
 ## Deployment
 **Version 1 (accepted, deployed):** source `contracts/v1/beat_the_jury.py`, 11,707 bytes, SHA-256 `ebbdd3c707ddf1fa111017d64d08b3692dfac129f77bcc87187dbde6f3b72e11` (one model call per settle). Its page is `app/index.html`.
 
-**Version 2 (Milestone, see MILESTONE.md):** source `contracts/beat_the_jury.py`, 11374 bytes, SHA-256 `a50807faccca53dc056ab1f61f11435c48b696b4419a1299b4cff794ea874fa3`. Not deployed yet when this was written. Its page is `app/v2/index.html`.
+**Version 2 (Milestone, see MILESTONE.md):** source `contracts/beat_the_jury.py`, 11374 bytes, SHA-256 `a50807faccca53dc056ab1f61f11435c48b696b4419a1299b4cff794ea874fa3`. Deployed on Bradbury at `0x43ea4820b17FaF39Bdd9D03F070D5De8ec137D57` (explorer: https://explorer-bradbury.genlayer.com/address/0x43ea4820b17FaF39Bdd9D03F070D5De8ec137D57, deployment transaction `0x7a0b320dca52ba1a516b9cda24c0ba90e3fe8d96584adce3c381a3f6080aab65`) and on Studio at `0x9fA94524ba035f85678f1c6c8fdaC338e2B3a575`. Its page is `app/v2/index.html` (live: https://captainkg15.github.io/beat-the-jury/app/v2/).
 
 The lines below describe version 1 unless they say otherwise.
 

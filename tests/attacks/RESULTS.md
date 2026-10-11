@@ -72,4 +72,13 @@ Page behaviour noted in this run: after the settle, the page's progress panel sa
 ## Version 2 (Milestone)
 Source `contracts/beat_the_jury.py`, 11374 bytes, SHA-256 `a50807faccca53dc056ab1f61f11435c48b696b4419a1299b4cff794ea874fa3`. Changes: plain HTTP fetch with browser fallback, and practice rounds (fewer than two revealed players) do not credit the leaderboard. See MILESTONE.md.
 
-**Not deployed or played on-chain yet when this was written. Nothing is claimed for it beyond the 103 off-chain checks.** Results will be listed here as they are played, failures included.
+Deployed on Studio at `0x9fA94524ba035f85678f1c6c8fdaC338e2B3a575` and on Bradbury at `0x43ea4820b17FaF39Bdd9D03F070D5De8ec137D57` (deployment transaction `0x7a0b320dca52ba1a516b9cda24c0ba90e3fe8d96584adce3c381a3f6080aab65`, accepted).
+
+### Studio
+| Round | Source | Claim | Guess | Verdict | Firmness | Leaderboard | Notes |
+|-------|--------|-------|-------|---------|----------|-------------|-------|
+| 0 | `en.wikipedia.org/wiki/Solana_(blockchain_platform)` | Solana is a blockchain platform | yes at 90% (practice round) | yes | 3 (unanimous) | unchanged (practice) | The same long article voided twice on version 1 on Studio and never settled on version 1 on Bradbury. This is the first time it settled on any version. One run; the cause of the earlier failures is still not confirmed. The page briefly showed the player as "did not reveal" after the settle; the round could only have settled after a reveal, so this was a failed read in the page, now shown as "could not load" instead. |
+
+### Bradbury
+Rounds are listed here as they are played, failures included.
+

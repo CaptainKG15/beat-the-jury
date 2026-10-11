@@ -238,7 +238,7 @@
 // ---------------------------------------------------------------- config
 // Fill in the deployed contract addresses, or use ?network=bradbury&address=0x...
 const CONFIG = {
-  addresses: { studionet: "", bradbury: "" },
+  addresses: { studionet: "0x9fA94524ba035f85678f1c6c8fdaC338e2B3a575", bradbury: "0x43ea4820b17FaF39Bdd9D03F070D5De8ec137D57" },
   chainKeys: { studionet: "studionet", bradbury: "testnetBradbury" },
   defaultNetwork: "bradbury",
 };
@@ -545,7 +545,8 @@ async function renderRound(r) {
     box.append(el("div", { class: "banner " + (r.status === "void" ? "bad" : "good"), text: r.status === "void" ? "Void. The page could not be read, so no points were awarded." : "The jury said " + r.verdict + "." }));
     const t = el("table", {}, [el("tr", {}, ["Player", "Guess", "Confidence", "Points"].map((h) => el("th", { text: h })))]);
     for (const p of r.players) {
-      let e = { revealed: false }; try { e = await read("get_entry", [BigInt(r.id), p]); } catch (x) {}
+      let e = null; try { e = await read("get_entry", [BigInt(r.id), p]); } catch (x) {}
+      if (!e) { t.append(el("tr", {}, [short(p) + (p === me ? " (you)" : ""), "could not load, press Refresh", "", ""].map((x) => el("td", { text: x })))); continue; }
       const pts = e.revealed && r.status === "settled" ? pointsFor(e.guess, e.confidence, r.verdict) : 0;
       t.append(el("tr", {}, [short(p) + (p === me ? " (you)" : ""), e.revealed ? e.guess : "did not reveal", e.revealed ? e.confidence + "%" : "", String(pts)].map((x) => el("td", { text: x }))));
     }
@@ -579,7 +580,8 @@ function init() {
   for (let i = 1; i <= 20; i++) $("maxp").append(el("option", { value: String(i), text: i === 1 ? "1 (practice)" : String(i), selected: i === 2 }));
   const p = new URLSearchParams(location.search);
   if (["studionet", "bradbury"].includes(p.get("network"))) net = p.get("network");
-  applyNetwork(); if (p.get("address")) { $("address").value = p.get("address"); applyNetwork(); $("address").value = p.get("address"); }
+  applyNetwork(); if (p.get("address")) { $("address").value = p.get("address"); }
+  $("connBtn").textContent = $("address").value ? "Contract " + short($("address").value.trim()) : "Set contract";
   $("connBtn").onclick = () => { const o = $("connection").classList.toggle("open"); $("connBtn").setAttribute("aria-expanded", String(o)); };
   $("network").onchange = () => { net = $("network").value; applyNetwork(); $("roundPanel").hidden = true; renderJury(null); loadRounds(); loadBoards(); };
   $("address").onchange = () => { try { localStorage.setItem("jury.address." + net, $("address").value.trim()); } catch (e) {} $("connBtn").textContent = "Contract " + short($("address").value.trim()); loadRounds(); loadBoards(); };
