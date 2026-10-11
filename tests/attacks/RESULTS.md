@@ -80,5 +80,15 @@ Deployed on Studio at `0x9fA94524ba035f85678f1c6c8fdaC338e2B3a575` and on Bradbu
 | 0 | `en.wikipedia.org/wiki/Solana_(blockchain_platform)` | Solana is a blockchain platform | yes at 90% (practice round) | yes | 3 (unanimous) | unchanged (practice) | The same long article voided twice on version 1 on Studio and never settled on version 1 on Bradbury. This is the first time it settled on any version. One run; the cause of the earlier failures is still not confirmed. The page briefly showed the player as "did not reveal" after the settle; the round could only have settled after a reveal, so this was a failed read in the page, now shown as "could not load" instead. |
 
 ### Bradbury
-Rounds are listed here as they are played, failures included.
+| Round | Source | Claim | Guess | Verdict | Firmness | Points (practice, not on leaderboard) | Notes |
+|-------|--------|-------|-------|---------|----------|------|-------|
+| 0 | `en.wikipedia.org/wiki/Solana_(blockchain_platform)` | Solana is a blockchain platform | yes at 90% | yes | 3 (unanimous) | 340 | The first Ask the jury ended in LEADER TIMEOUT on the explorer (tx `0x4f7cb35b...251bb4b`). A single retry settled in about 1 minute (tester's estimate). Version 1 never settled this page on Bradbury in three attempts. One settle out of two attempts on version 2, so an improvement, not a fix. |
+| 1 | `beat-the-jury/tests/pages/borderline.html` | Acme's Q3 revenue was 12 million dollars | unclear at 60% | yes | 3 (unanimous) | 135 | Settled first try in about 1 minute 30 seconds (tester's estimate). Matches the scoring rule: (68600 - 41600) / 200 = 135. On version 1 the same page and claim gave a three-way split and `unclear`; one run each, so this shows the jury varying on an ambiguous claim rather than a difference caused by the code. |
+
+After these rounds the version 2 leaderboard was empty (both were practice rounds) and the jury record read 2 unanimous.
+
+### What version 2 shows so far
+- The long Solana page settled on both Studio (first try) and Bradbury (second try, after one LEADER TIMEOUT). Version 1 never settled it on either network. Three runs in total, so this is evidence of improvement, not proof of a fix, and the cause of the remaining timeout is unknown. It is also unknown whether the plain fetch or the browser fallback actually ran on Bradbury.
+- Practice rounds behave as designed: they settle, show points, update the jury record and leave the leaderboard untouched.
+- Not yet run on version 2: a two-player round on-chain (tested off-chain only), a hostile page, an unreadable page, and any repeat of the same claim to measure jury stability.
 
